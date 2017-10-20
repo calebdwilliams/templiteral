@@ -136,7 +136,6 @@ class Template {
                 boundAttrs.set(attributes[i].name, attributes[i]);
               }
             }
-            console.log(boundAttrs)
 
             if (boundAttrs.size >= 1) {
               const attrNode = new AttributeNode(currentNode, index, boundAttrs);
