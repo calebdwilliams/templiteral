@@ -9,6 +9,10 @@ class BaseComponent extends HTMLElement {
   compile(location) {
     return compile(this, location);
   }
+
+  render(location) {
+    this.compile(location)
+  }
 }
 
 class MyEl extends BaseComponent {
@@ -23,7 +27,20 @@ class MyEl extends BaseComponent {
   }
 
   render(location) {
-    this.compile(location)`<h1>${this.who}</h1>`;
+    this.compile(location)`
+      <style>
+        .Caleb {
+          color: tomato;
+        }
+        .world {
+          color: mediumaquamarine;
+        }
+      </style>
+      <h1 class="heading" role="header">${this.who}</h1>
+      <div class="${this.who} arbitrary">
+        <h2>Test</h2>
+      </div>
+    `;
   }
 }
 
