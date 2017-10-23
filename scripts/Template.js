@@ -2,16 +2,17 @@ import { ContentNode } from './ContentNode.js';
 import { AttributeNode } from './AttributeNode.js';
 
 export class Template {
-  constructor(base, location, values) {
+  constructor(base, location, context) {
     const template = document.createElement('template');
     const content = base.replace(/---!\{/gi, '').replace(/\}!---/gi, '');
     this.templateBase = base;
     template.innerHTML = content;
     this.node = document.importNode(template.content, true);
-    this.parts = [];
+    this.parts = new Map();
+    this.eventHandlers = [];
     this.identifier = Math.random();
     this.location = location;
-    this.values = values;
+    this.context = context;
     this._init(base);
   }
 
@@ -29,8 +30,9 @@ export class Template {
 
   _parseUpdates(walker) {
     let index = -1;
-    const updatedParts = [];
+    const updatedParts = new Map();
     const pattern = /---!\{.*\}!---/gi;
+    const eventPattern = /^\(.*\)$/gi;
     while (walker.nextNode()) {
       index += 1;
       const { currentNode } = walker;
@@ -39,14 +41,20 @@ export class Template {
         const { attributes } = currentNode;
         if (attributes.length) {
           const boundAttrs = new Map();
+          const boundEvents = new Map();
           for (let i = 0; i < attributes.length; i += 1) {
             if (attributes[i].value.match(pattern)) {
               boundAttrs.set(attributes[i].name, attributes[i]);
             }
+            if (attributes[i].name.match(eventPattern)) {
+              const eventName = attributes[i].name.substring(1, attributes[i].name.length - 1);
+              boundEvents.set(eventName, attributes[i].value);
+              this.eventHandlers.push({ eventName, currentNode });
+            }
           }
-          if (boundAttrs.size >= 1) {
-            const attrNode = new AttributeNode(currentNode, index, boundAttrs);
-            updatedParts.push(attrNode);
+          if (boundAttrs.size >= 1 || boundEvents.size >= 1) {
+            const attrNode = new AttributeNode(currentNode, index, boundAttrs, boundEvents, this.context);
+            updatedParts.set(index, attrNode);
             attrNode.cleanUp();
           }
         }
@@ -55,7 +63,7 @@ export class Template {
       case 3: {
         if (currentNode.textContent && currentNode.textContent.match(pattern)) {
           const contentNode = new ContentNode(currentNode, index);
-          updatedParts.push(contentNode);
+          updatedParts.set(index, contentNode);
           contentNode.cleanUp();
         }
         break;
@@ -63,13 +71,14 @@ export class Template {
       }
     }
 
-    this.parts.forEach((part, index) => part.update(updatedParts[index]));
+    this.parts.forEach((part, index) => part.update(updatedParts.get(index)));
   }
 
   _init(base) {
     const baseTemplate = document.createElement('template');
     baseTemplate.innerHTML = base;
     const pattern = /---!\{.*\}!---/gi;
+    const eventPattern = /^\(.*\)$/gi;
     const baseNode = document.importNode(baseTemplate.content, true);
     const walker = document.createTreeWalker(baseNode, 133, null, false);
     let index = -1;
@@ -81,14 +90,20 @@ export class Template {
         const { attributes } = currentNode;
         if (attributes.length) {
           const boundAttrs = new Map();
+          const boundEvents = new Map();
           for (let i = 0; i < attributes.length; i += 1) {
             if (attributes[i].value.match(pattern)) {
               boundAttrs.set(attributes[i].name, attributes[i]);
             }
+            if (attributes[i].name.match(eventPattern)) {
+              const eventName = attributes[i].name.substring(1, attributes[i].name.length - 1);
+              boundEvents.set(eventName, attributes[i].value);
+              this.eventHandlers.push({ eventName, currentNode });
+            }
           }
-          if (boundAttrs.size >= 1) {
-            const attrNode = new AttributeNode(currentNode, index, boundAttrs);
-            this.parts.push(attrNode);
+          if (boundAttrs.size >= 1 || boundEvents.size >= 1) {
+            const attrNode = new AttributeNode(currentNode, index, boundAttrs, boundEvents, this.context);
+            this.parts.set(index, attrNode);
             attrNode.cleanUp();
           }
         }
@@ -97,7 +112,7 @@ export class Template {
       case 3: {
         if (currentNode.textContent && currentNode.textContent.match(pattern)) {
           const contentNode = new ContentNode(currentNode, index);
-          this.parts.push(contentNode);
+          this.parts.set(index, contentNode);
           contentNode.cleanUp();
         }
         break;

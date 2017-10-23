@@ -1,8 +1,23 @@
 export class AttributeNode {
-  constructor(node, index, boundAttrs) {
+  constructor(node, index, boundAttrs, boundEvents, context) {
     this.node = node;
     this.index = index;
     this.boundAttrs = boundAttrs;
+    this.boundEvents = boundEvents;
+    this.context = context;
+
+    this.addListeners();
+  }
+
+  addListeners() {
+    this.boundEvents.forEach((eventHandler, eventName) => {
+      // const method = eventHandler.replace(/this.|\(.*\)$/g, '').replace();
+      // const args = eventHandler.replace(method, '').replace(/\(|\)/g, '').split(',');
+      console.log(eventHandler)
+      this.node.addEventListener(eventName, function(event) {
+        eval(eventHandler);
+      }.bind(this.context));
+    });
   }
 
   cleanUp() {

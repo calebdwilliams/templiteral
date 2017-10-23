@@ -13,7 +13,7 @@ function html(location) {
     if (compiler) {
       compiler.update(output, values);
     } else {
-      compiler = new Template(output, location, values);
+      compiler = new Template(output, location, this);
       templateCache.set(templateKey, compiler);
     }
 
@@ -21,7 +21,7 @@ function html(location) {
   }
 }
 
-export function templit(location, context = this) {
+export function templit(location, context) {
   function render(...args) {
     const renderer = Reflect.apply(html, context, [location]);
     return Reflect.apply(renderer, context, args);

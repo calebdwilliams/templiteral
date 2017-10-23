@@ -17,7 +17,7 @@ class MyEl extends HTMLElement {
   constructor() {
     super();
     this._shadowRoot = this.attachShadow({ mode: 'open' });
-    this.renderTemplate = templit(this._shadowRoot);
+    this.renderTemplate = templit(this._shadowRoot, this);
   }
 
   connectedCallback() {
@@ -32,6 +32,16 @@ class MyEl extends HTMLElement {
 
   set who(_who) {
     _who ? this.setAttribute('who', _who) : this.removeAttribute('who');
+  }
+
+  log(event, who) {
+    console.log({event});
+    console.log('old who', who);
+    if (this.who === 'Caleb') {
+      this.who = 'world';
+    } else {
+      this.who = 'Caleb';
+    }
   }
 
   render() {
@@ -56,6 +66,8 @@ class MyEl extends HTMLElement {
       <p>Vivamus efficitur nulla nec nulla faucibus ultricies. Sed sed lacus vel nisl mattis aliquet quis rhoncus magna. Etiam aliquam eget leo nec tincidunt. Maecenas lacinia consectetur augue, vitae euismod augue eleifend quis. Mauris et aliquam velit.</p>
 
       <p>Quisque sit amet lorem in mauris viverra facilisis. Vestibulum pharetra elit eget eleifend tempor.</p>
+
+      <button (click)="this.log(event, this.who)">Toggle world/Caleb</button>
     `;
   }
 }
