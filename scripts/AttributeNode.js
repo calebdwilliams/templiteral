@@ -11,9 +11,6 @@ export class AttributeNode {
 
   addListeners() {
     this.boundEvents.forEach((eventHandler, eventName) => {
-      // const method = eventHandler.replace(/this.|\(.*\)$/g, '').replace();
-      // const args = eventHandler.replace(method, '').replace(/\(|\)/g, '').split(',');
-      console.log(eventHandler)
       this.node.addEventListener(eventName, function(event) {
         eval(eventHandler);
       }.bind(this.context));
