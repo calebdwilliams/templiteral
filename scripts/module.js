@@ -1,9 +1,8 @@
-import { templit } from './compile.js';
+import { templit } from './templit.js';
 
 class MyEl extends HTMLElement {
-  static get boundAttributes() {
-    return ['who'];
-  }
+  static get tagName() { return 'my-el'; }
+  static get boundAttributes() { return ['who']; }
   static get observedAttributes() {
     return ['test', ...this.boundAttributes];
   }
@@ -26,6 +25,10 @@ class MyEl extends HTMLElement {
     this.render();
   }
 
+  get buttonMessage() {
+    return this.who === 'Caleb' ? 'Set who to Caleb' : 'Set who to world';
+  }
+
   get who() {
     return this.getAttribute('who');
   }
@@ -34,7 +37,8 @@ class MyEl extends HTMLElement {
     _who ? this.setAttribute('who', _who) : this.removeAttribute('who');
   }
 
-  log(event, who) {
+  toggleWho(event, who) {
+    event.preventDefault();
     if (this.who === 'Caleb') {
       this.who = 'world';
     } else {
@@ -80,11 +84,11 @@ class MyEl extends HTMLElement {
         <input id="name" type="text" name="name">
 
         <button>Submit</button>
-      </div>
+      </form>
 
-      <button (click)="this.log(event, this.who)">Toggle world/Caleb</button>
+      <button (click)="this.toggleWho(event, this.who)">${this.buttonMessage}</button>
     `;
   }
 }
 
-customElements.define('my-el', MyEl);
+customElements.define(MyEl.tagName, MyEl);
