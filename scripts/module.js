@@ -17,6 +17,8 @@ class MyEl extends HTMLElement {
     super();
     this._shadowRoot = this.attachShadow({ mode: 'open' });
     this.renderTemplate = templit(this._shadowRoot, this);
+    this.pContentEditable = false;
+    console.log(this.renderTemplate)
   }
 
   connectedCallback() {
@@ -37,6 +39,11 @@ class MyEl extends HTMLElement {
     _who ? this.setAttribute('who', _who) : this.removeAttribute('who');
   }
 
+  toggleContentEditable() {
+    this.pContentEditable = !this.pContentEditable;
+    this.render();
+  }
+
   toggleWho(event, who) {
     event.preventDefault();
     if (this.who === 'Caleb') {
@@ -51,8 +58,13 @@ class MyEl extends HTMLElement {
     const inputs = this._shadowRoot.querySelector('form').querySelectorAll('[name]');
 
     inputs.forEach(input => {
-      console.log(input.name, input.value);
+      // console.log(input.name, input.value);
     });
+
+    this.who = this._shadowRoot.querySelector('input').value;
+  }
+
+  updateName() {
     this.who = this._shadowRoot.querySelector('input').value;
   }
 
@@ -68,12 +80,18 @@ class MyEl extends HTMLElement {
         .world {
           color: mediumaquamarine;
         }
+        [contenteditable] {
+          border: 1px dotted #1a1a1a;
+          border-right: 5px solid #bada55;
+          padding: 5px;
+          transition: all 0.2s ease;
+        }
       </style>
       <h1 class="heading" role="header">Hello ${this.who}</h1>
       <div class="${this.who} arbitrary">
         <h2>Test</h2>
       </div>
-      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean sapien magna, aliquet non massa dapibus, convallis porta sem. Phasellus laoreet, turpis et feugiat malesuada, quam magna tincidunt diam, at tempor sapien nisl nec elit. Curabitur suscipit mi eu dolor tempor luctus eu vel tortor.</p>
+      <p [contentEditable]="${this.pContentEditable}">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean sapien magna, aliquet non massa dapibus, convallis porta sem. Phasellus laoreet, turpis et feugiat malesuada, quam magna tincidunt diam, at tempor sapien nisl nec elit. Curabitur suscipit mi eu dolor tempor luctus eu vel tortor.</p>
 
       <p>Vivamus efficitur nulla nec nulla faucibus ultricies. Sed sed lacus vel nisl mattis aliquet quis rhoncus magna. Etiam aliquam eget leo nec tincidunt. Maecenas lacinia consectetur augue, vitae euismod augue eleifend quis. Mauris et aliquam velit.</p>
 
@@ -81,12 +99,14 @@ class MyEl extends HTMLElement {
 
       <form (submit)="this.update(event)">
         <label for="name">Name</name>
-        <input id="name" type="text" name="name">
+        <input id="name" type="text" name="name" (input)="this.updateName()">
 
         <button>Submit</button>
       </form>
 
       <button (click)="this.toggleWho(event, this.who)">${this.buttonMessage}</button>
+      <button (click)="this.toggleContentEditable()">Toggle content editable</button>
+
     `;
   }
 }
