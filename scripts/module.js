@@ -35,13 +35,21 @@ class MyEl extends HTMLElement {
   }
 
   log(event, who) {
-    console.log({event});
-    console.log('old who', who);
     if (this.who === 'Caleb') {
       this.who = 'world';
     } else {
       this.who = 'Caleb';
     }
+  }
+
+  update(event) {
+    event.preventDefault();
+    const inputs = this._shadowRoot.querySelector('form').querySelectorAll('[name]');
+
+    inputs.forEach(input => {
+      console.log(input.name, input.value);
+    });
+    this.who = this._shadowRoot.querySelector('input').value;
   }
 
   render() {
@@ -66,6 +74,13 @@ class MyEl extends HTMLElement {
       <p>Vivamus efficitur nulla nec nulla faucibus ultricies. Sed sed lacus vel nisl mattis aliquet quis rhoncus magna. Etiam aliquam eget leo nec tincidunt. Maecenas lacinia consectetur augue, vitae euismod augue eleifend quis. Mauris et aliquam velit.</p>
 
       <p>Quisque sit amet lorem in mauris viverra facilisis. Vestibulum pharetra elit eget eleifend tempor.</p>
+
+      <form (submit)="this.update(event)">
+        <label for="name">Name</name>
+        <input id="name" type="text" name="name">
+
+        <button>Submit</button>
+      </div>
 
       <button (click)="this.log(event, this.who)">Toggle world/Caleb</button>
     `;

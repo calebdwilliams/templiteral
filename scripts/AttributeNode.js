@@ -24,7 +24,7 @@ export class AttributeNode {
   update(newNode) {
     this.boundAttrs.forEach(attr => {
       const newAttr = newNode.boundAttrs.get(attr.name);
-      attr.value !== newAttr.value ? attr.value = newAttr.value : null;
+      newAttr && attr.value !== newAttr.value ? attr.value = newAttr.value : null;
     });
   }
 }

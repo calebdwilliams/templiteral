@@ -52,7 +52,7 @@ export class Template {
               this.eventHandlers.push({ eventName, currentNode });
             }
           }
-          if (boundAttrs.size >= 1 || boundEvents.size >= 1) {
+          if (boundAttrs.size >= 1 || boundEvents.size >= 1 || this.parts.has(index)) {
             const attrNode = new AttributeNode(currentNode, index, boundAttrs, boundEvents, this.context);
             updatedParts.set(index, attrNode);
             attrNode.cleanUp();
@@ -61,7 +61,7 @@ export class Template {
         break;
       }
       case 3: {
-        if (currentNode.textContent && currentNode.textContent.match(pattern)) {
+        if (currentNode.textContent && currentNode.textContent.match(pattern) || this.parts.has(index)) {
           const contentNode = new ContentNode(currentNode, index);
           updatedParts.set(index, contentNode);
           contentNode.cleanUp();
