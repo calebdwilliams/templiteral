@@ -1,4 +1,4 @@
-import { propPattern, sanitizePattern } from './patterns.js';
+import { propPattern, sanitizePattern, startSeparator, endSeparator } from './patterns.js';
 
 export class AttributeNode {
   constructor(node, index, boundAttrs, boundEvents, context) {
@@ -29,7 +29,7 @@ export class AttributeNode {
 
   cleanUp() {
     this.boundAttrs.forEach(attr =>
-      attr.value = attr.value.replace('---!{', '').replace('}!---', ''));
+      attr.value = attr.value.replace(startSeparator, '').replace(endSeparator, ''));
   }
 
   update(newNode) {

@@ -27,6 +27,10 @@ class MyEl extends HTMLElement {
     this.render();
   }
 
+  disconnectedCallback() {
+    this._shadowRoot.__compiler.disconnect();
+  }
+
   get buttonMessage() {
     return this.who === 'Caleb' ? 'Set who to Caleb' : 'Set who to world';
   }
@@ -69,7 +73,7 @@ class MyEl extends HTMLElement {
   }
 
   render() {
-    this.renderTemplate`
+    this._template = this.renderTemplate`
       <style>
         .Caleb {
           color: tomato;

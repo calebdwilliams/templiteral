@@ -1,3 +1,5 @@
+import { startSeparator, endSeparator } from './patterns.js';
+
 export class ContentNode {
   constructor(node, index) {
     this.node = node;
@@ -5,7 +7,7 @@ export class ContentNode {
   }
 
   cleanUp() {
-    this.node.textContent = this.node.textContent.replace('---!{', '').replace('}!---', '');
+    this.node.textContent = this.node.textContent.replace(startSeparator, '').replace(endSeparator, '');
   }
 
   update(newNode) {

@@ -1,17 +1,15 @@
 import { ContentNode } from './ContentNode.js';
 import { AttributeNode } from './AttributeNode.js';
-import { valuePattern, eventPattern, propPattern } from './patterns.js';
+import { valuePattern, eventPattern, propPattern, startSeparator, endSeparator } from './patterns.js';
 
 export class Template {
   constructor(base, location, context) {
     const template = document.createElement('template');
-    const content = base.replace(/---!\{/gi, '').replace(/\}!---/gi, '');
-    this.templateBase = base;
+    const content = base.replace(startSeparator, '').replace(endSeparator, '');
     template.innerHTML = content;
     this.node = document.importNode(template.content, true);
     this.parts = new Map();
     this.eventHandlers = [];
-    this.identifier = Math.random();
     this.location = location;
     this.context = context;
     this._init(base);
@@ -21,7 +19,7 @@ export class Template {
     this.location.appendChild(this.node);
   }
 
-  update(content, values) {
+  update(content) {
     const template = document.createElement('template');
     template.innerHTML = content;
     const newNode = document.importNode(template.content, true);
@@ -29,9 +27,8 @@ export class Template {
     this._parseUpdates(newNodeWalker);
   }
 
-  _parseUpdates(walker, parts) {
+  _parseUpdates(walker) {
     const updatedParts = this._walk(walker, new Map());
-
     this.parts.forEach((part, index) => part.update(updatedParts.get(index)));
   }
 
@@ -58,12 +55,13 @@ export class Template {
           const boundAttrs = new Map();
           const boundEvents = new Map();
           for (let i = 0; i < attributes.length; i += 1) {
-            if (attributes[i].value.match(valuePattern) || attributes[i].name.match(propPattern)) {
-              boundAttrs.set(attributes[i].name, attributes[i]);
+            const attribute = attributes[i];
+            if (attribute.value.match(valuePattern) || attribute.name.match(propPattern)) {
+              boundAttrs.set(attribute.name, attribute);
             }
-            if (attributes[i].name.match(eventPattern)) {
-              const eventName = attributes[i].name.substring(1, attributes[i].name.length - 1);
-              boundEvents.set(eventName, attributes[i].value);
+            if (attribute.name.match(eventPattern)) {
+              const eventName = attribute.name.substring(1, attribute.name.length - 1);
+              boundEvents.set(eventName, attribute.value);
               this.eventHandlers.push({ eventName, currentNode });
             }
           }

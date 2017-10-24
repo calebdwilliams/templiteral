@@ -11,13 +11,11 @@ function html(location) {
     let compiler = templateCache.get(templateKey);
 
     if (compiler) {
-      compiler.update(output, values);
+      compiler.update(output);
     } else {
       compiler = new Template(output, location, this);
       templateCache.set(templateKey, compiler);
     }
-
-    location.__compiler = compiler;
   }
 }
 
