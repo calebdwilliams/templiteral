@@ -1,5 +1,4 @@
-import { templit } from '../scripts/templit';
-// const templit = require('../scripts/templit');
+import { templit } from '../src/templit';
 
 let myEl;
 
