@@ -1,4 +1,4 @@
-import { templit } from '../src/templit';
+import { templit } from '../dist/templit.es';
 
 let myEl;
 

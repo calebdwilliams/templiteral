@@ -1,5 +1,4 @@
 const { join } = require('path');
-const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = config => {
   config.set({
@@ -16,29 +15,12 @@ module.exports = config => {
     ],
 
     preprocessors: {
-      'test/*.test.js': ['webpack']
+      'test/*.test.js': ['rollup']
     },
 
-    webpack: {
-      output: {
-        filename: 'dist/templit.min.js'
-      },
-      module: {
-        rules: [
-          {
-            test: /\.js$/,
-            use: ['istanbul-instrumenter-loader', {
-              loader: 'babel-loader',
-              options: { presets: ['env'] }
-            }],
-            include: /scripts/
-          }
-        ]
-      },
-      plugins: [
-        new UglifyJSPlugin()
-      ]
-    }
-
+    rollupPreprocessor: {
+			format: 'es',
+			sourcemap: 'inline'
+		}
   });
 };

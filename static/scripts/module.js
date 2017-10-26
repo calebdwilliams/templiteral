@@ -1,4 +1,4 @@
-import { templit } from './templit.js';
+import { templit } from '../templit.js';
 
 class MyEl extends HTMLElement {
   static get tagName() { return 'my-el'; }
@@ -18,7 +18,6 @@ class MyEl extends HTMLElement {
     this._shadowRoot = this.attachShadow({ mode: 'open' });
     this.renderTemplate = templit(this._shadowRoot, this);
     this.pContentEditable = false;
-    console.log(this.renderTemplate)
   }
 
   connectedCallback() {
