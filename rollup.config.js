@@ -1,19 +1,19 @@
 // import uglify from 'rollup-plugin-uglify-es';
 
 export default {
-  input: 'src/templit.js',
+  input: 'src/templiteral.js',
   output: [{
-    file: 'dist/templit.es.js',
+    file: 'dist/templiteral.es.js',
     format: 'es'
   }, {
-    file: 'dist/templit.cjs.js',
+    file: 'dist/templiteral.cjs.js',
     format: 'cjs'
   }, {
-    file: 'dist/templit.umd.js',
+    file: 'dist/templiteral.umd.js',
     format: 'umd',
     name: 'templit'
   }, {
-    file: 'dist/templit.js',
+    file: 'dist/templiteral.js',
     format: 'iife',
     name: 'templit'
   }]

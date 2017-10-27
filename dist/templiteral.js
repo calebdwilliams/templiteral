@@ -1,3 +1,6 @@
+var templit = (function (exports) {
+'use strict';
+
 const valuePattern = /---!\{.*\}!---/gi;
 const eventPattern = /^\(.*\)$/gi;
 const propPattern = /^\[.*\]$/;
@@ -183,7 +186,7 @@ function html(location) {
   }
 }
 
-function templit(location, context) {
+function templiteral(location, context) {
   function render(...args) {
     const renderer = Reflect.apply(html, context, [location]);
     return Reflect.apply(renderer, context, args);
@@ -191,4 +194,8 @@ function templit(location, context) {
   return render.bind(context);
 }
 
-export { templit };
+exports.templiteral = templiteral;
+
+return exports;
+
+}({}));

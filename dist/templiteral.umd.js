@@ -189,7 +189,7 @@ function html(location) {
   }
 }
 
-function templit(location, context) {
+function templiteral(location, context) {
   function render(...args) {
     const renderer = Reflect.apply(html, context, [location]);
     return Reflect.apply(renderer, context, args);
@@ -197,7 +197,7 @@ function templit(location, context) {
   return render.bind(context);
 }
 
-exports.templit = templit;
+exports.templiteral = templiteral;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 

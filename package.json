@@ -1,20 +1,21 @@
 {
-  "name": "templit",
+  "name": "templiteral",
   "author": "Caleb D. Williams <caleb.d.williams@gmail.com>",
+  "keywords": ["template literal", "javascript", "html"],
   "version": "1.1.1",
   "description": "",
-  "main": "dist/templit.js",
-  "module": "dist/templit.esm.js",
+  "main": "dist/templiteral.js",
+  "module": "dist/templiteral.esm.js",
   "scripts": {
     "prebuild": "npm run clean",
     "build": "rollup -c",
-    "postbuild": "uglifyjs dist/templit.js -o dist/templit.min.js -m && uglifyjs dist/templit.cjs.js -o dist/templit.cjs.min.js -m && uglifyjs dist/templit.umd.js -o dist/templit.umd.min.js -m && uglifyjs dist/templit.es.js -o dist/templit.es.min.js",
+    "postbuild": "uglifyjs dist/templiteral.js -o dist/templiteral.min.js -m && uglifyjs dist/templiteral.cjs.js -o dist/templiteral.cjs.min.js -m && uglifyjs dist/templiteral.umd.js -o dist/templiteral.umd.min.js -m && uglifyjs dist/templiteral.es.js -o dist/templiteral.es.min.js",
     "clean": "rimraf dist",
     "release": "standard-version",
     "start": "node server.js",
     "test": "karma start"
   },
-  "license": "ISC",
+  "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {},
   "devDependencies": {
     "body-parser": "^1.18.2",

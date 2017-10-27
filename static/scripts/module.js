@@ -1,8 +1,8 @@
-import { templit } from '../templit.js';
+import { templiteral } from '../templiteral.js';
 
 class MyEl extends HTMLElement {
   static get tagName() { return 'my-el'; }
-  static get boundAttributes() { return ['who']; }
+  static get boundAttributes() { return ['name']; }
   static get observedAttributes() {
     return ['test', ...this.boundAttributes];
   }
@@ -16,12 +16,12 @@ class MyEl extends HTMLElement {
   constructor() {
     super();
     this._shadowRoot = this.attachShadow({ mode: 'open' });
-    this.renderTemplate = templit(this._shadowRoot, this);
+    this.renderTemplate = templiteral(this._shadowRoot, this);
     this.pContentEditable = false;
   }
 
   connectedCallback() {
-    this.who = 'Caleb';
+    this.name = 'everyone';
 
     this.render();
   }
@@ -31,15 +31,15 @@ class MyEl extends HTMLElement {
   }
 
   get buttonMessage() {
-    return this.who === 'Caleb' ? 'Set who to Caleb' : 'Set who to world';
+    return this.name === 'everyone' ? 'Set name to everyone' : 'Set name to world';
   }
 
-  get who() {
-    return this.getAttribute('who');
+  get name() {
+    return this.getAttribute('name');
   }
 
-  set who(_who) {
-    _who ? this.setAttribute('who', _who) : this.removeAttribute('who');
+  set name(_name) {
+    _name ? this.setAttribute('name', _name) : this.removeAttribute('name');
   }
 
   toggleContentEditable() {
@@ -47,12 +47,12 @@ class MyEl extends HTMLElement {
     this.render();
   }
 
-  toggleWho(event, who) {
+  toggleName(event, name) {
     event.preventDefault();
-    if (this.who === 'Caleb') {
-      this.who = 'world';
+    if (this.name === 'everyone') {
+      this.name = 'world';
     } else {
-      this.who = 'Caleb';
+      this.name = 'everyone';
     }
   }
 
@@ -64,20 +64,20 @@ class MyEl extends HTMLElement {
       // console.log(input.name, input.value);
     });
 
-    this.who = this._shadowRoot.querySelector('input').value;
+    this.name = this._shadowRoot.querySelector('input').value;
   }
 
   updateName() {
-    this.who = this._shadowRoot.querySelector('input').value;
+    this.name = this._shadowRoot.querySelector('input').value;
   }
 
   render() {
     this._template = this.renderTemplate`
       <style>
-        .Caleb {
+        .everyone {
           color: tomato;
         }
-        .Leland {
+        .someone {
           color: rebeccapurple;
         }
         .world {
@@ -90,8 +90,8 @@ class MyEl extends HTMLElement {
           transition: all 0.2s ease;
         }
       </style>
-      <h1 class="heading" role="header">Hello ${this.who}</h1>
-      <div class="${this.who} arbitrary">
+      <h1 class="heading" role="header">Hello ${this.name}</h1>
+      <div class="${this.name} arbitrary">
         <h2>Test</h2>
       </div>
       <p [contentEditable]="${this.pContentEditable}">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean sapien magna, aliquet non massa dapibus, convallis porta sem. Phasellus laoreet, turpis et feugiat malesuada, quam magna tincidunt diam, at tempor sapien nisl nec elit. Curabitur suscipit mi eu dolor tempor luctus eu vel tortor.</p>
@@ -107,7 +107,7 @@ class MyEl extends HTMLElement {
         <button>Submit</button>
       </form>
 
-      <button (click)="this.toggleWho(event, this.who)">${this.buttonMessage}</button>
+      <button (click)="this.toggleName(event, this.name)">${this.buttonMessage}</button>
       <button (click)="this.toggleContentEditable()">Toggle content editable</button>
 
     `;
