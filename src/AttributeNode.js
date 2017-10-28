@@ -37,7 +37,6 @@ export class AttributeNode {
       const newAttr = newNode.boundAttrs.get(attr.name);
       newAttr && attr.value !== newAttr.value ? attr.value = newAttr.value : null;
 
-      /* TODO */
       if (attr.name.match(propPattern)) {
         this.updateAttributes(attr.name, newAttr);
       }
