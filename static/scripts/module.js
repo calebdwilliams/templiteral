@@ -16,7 +16,6 @@ class MyEl extends HTMLElement {
   constructor() {
     super();
     this._shadowRoot = this.attachShadow({ mode: 'open' });
-    this.renderTemplate = templiteral(this._shadowRoot, this);
     this.pContentEditable = false;
   }
 
@@ -72,7 +71,7 @@ class MyEl extends HTMLElement {
   }
 
   render() {
-    this._template = this.renderTemplate`
+    templiteral(this._shadowRoot, this)`
       <style>
         .everyone {
           color: tomato;
