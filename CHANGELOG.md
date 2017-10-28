@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.1.3"></a>
+## [1.1.3](https://github.com/calebdwilliams/templiteral/compare/v1.1.2...v1.1.3) (2017-10-28)
+
+
+### Bug Fixes
+
+* **Minor updates:** Fixed some style issues and added eslint ([a65d724](https://github.com/calebdwilliams/templiteral/commit/a65d724))
+
+
+
 <a name="1.1.2"></a>
 ## [1.1.2](https://github.com/calebdwilliams/templiteral/compare/v1.1.1...v1.1.2) (2017-10-27)
 
