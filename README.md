@@ -62,7 +62,7 @@ Now when an instance of `my-el` is inserted into the DOM, the `render` method wi
 
 Templiteral provides Angular 2+-style event bindings using the `(<eventName>)="this.eventHandler(...args)"` syntax.
 
-```javascript
+```html
 <button (click)="this.logClickEvent(event)">Log a message</button>
 ```
 
@@ -70,6 +70,6 @@ This would call the component's `logClickEvent` with the event object as the arg
 
 Similarly property bindings are using the bracket notation `[<propertyName>]="${this.someProp}"`.
 
-```javascript
+```html
 <input type="text" id="name" name="name" [required]="${this.isRequired}">
 ```
