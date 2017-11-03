@@ -59,7 +59,6 @@ class AttributeNode {
       const newAttr = newNode.boundAttrs.get(attr.name);
       newAttr && attr.value !== newAttr.value ? attr.value = newAttr.value : null;
 
-      /* TODO */
       if (attr.name.match(propPattern)) {
         this.updateAttributes(attr.name, newAttr);
       }
@@ -180,10 +179,10 @@ function html(location) {
       compiler = new Template(output, location, this);
       templateCache.set(templateKey, compiler);
     }
-  }
+  };
 }
 
-function templiteral(location, context) {
+function templiteral(location, context = this) {
   function render(...args) {
     const renderer = Reflect.apply(html, context, [location]);
     return Reflect.apply(renderer, context, args);

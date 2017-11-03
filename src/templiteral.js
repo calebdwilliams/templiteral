@@ -19,7 +19,7 @@ function html(location) {
   };
 }
 
-export function templiteral(location, context) {
+export function templiteral(location, context = this) {
   function render(...args) {
     const renderer = Reflect.apply(html, context, [location]);
     return Reflect.apply(renderer, context, args);
