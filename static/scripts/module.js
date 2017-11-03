@@ -27,7 +27,7 @@ class MyEl extends HTMLElement {
   }
 
   disconnectedCallback() {
-    this._shadowRoot.__compiler.disconnect();
+    this._shadowRoot.template.disconnect();
   }
 
   get buttonMessage() {
@@ -72,7 +72,7 @@ class MyEl extends HTMLElement {
   }
 
   render() {
-    this.templiteral(this._shadowRoot)`
+    this.template = this.templiteral(this._shadowRoot)`
       <style>
         .everyone {
           color: tomato;

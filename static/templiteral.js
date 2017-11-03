@@ -35,12 +35,13 @@ class AttributeNode {
 
   addListeners() {
     this.boundEvents.forEach((eventHandler, eventName) => {
-      const events = eventHandler.split(/\;/);
+      const events = eventHandler.split(/;/);
       const eventsSafe = events.filter(event => event.match(sanitizePattern));
       const sanitizedEvents = eventsSafe.join('; ');
       if (eventHandler.match(sanitizePattern)) {
-        const handler = new Function(sanitizedEvents);
-        this.node.addEventListener(eventName, handler.bind(this.context));
+        const handler = new Function(sanitizedEvents).bind(this.context);
+        this.node.addEventListener(eventName, handler);
+        this.node._boundEvents = { handler };
       }
 
       if (eventsSafe.length < events.length) {
@@ -71,7 +72,6 @@ class AttributeNode {
       this.node[attributeName] = newAttr.value;
       this.node.setAttribute(attributeName, newAttr.value);
     } else {
-      this.node;
       this.node.removeAttribute(attributeName);
     }
   }
@@ -90,6 +90,14 @@ class Template {
     this._init(base);
   }
 
+  disconnect() {
+    this.eventHandlers.forEach((eventName, index) => {
+      const node = this.eventHandlers[index].currentNode;
+      node.removeEventListener(eventName, node._boundEvents.handler);
+      console.log(node._boundEvents);
+    });
+  }
+
   paint() {
     this.location.appendChild(this.node);
   }
@@ -103,7 +111,7 @@ class Template {
   }
 
   _parseUpdates(walker) {
-    const updatedParts = this._walk(walker, new Map());
+    const updatedParts = this._walk(walker, new Map(), false);
     this.parts.forEach((part, index) => part.update(updatedParts.get(index)));
   }
 
@@ -112,12 +120,12 @@ class Template {
     baseTemplate.innerHTML = base;
     const baseNode = document.importNode(baseTemplate.content, true);
     const walker = document.createTreeWalker(baseNode, 133, null, false);
-    this._walk(walker, this.parts);
+    this._walk(walker, this.parts, true);
     this.node = baseNode;
     this.paint();
   }
 
-  _walk(walker, parts) {
+  _walk(walker, parts, setup) {
     let index = -1;
 
     while (walker.nextNode()) {
@@ -134,7 +142,7 @@ class Template {
             if (attribute.value.match(valuePattern) || attribute.name.match(propPattern)) {
               boundAttrs.set(attribute.name, attribute);
             }
-            if (attribute.name.match(eventPattern)) {
+            if (setup && attribute.name.match(eventPattern)) {
               const eventName = attribute.name.substring(1, attribute.name.length - 1);
               boundEvents.set(eventName, attribute.value);
               this.eventHandlers.push({ eventName, currentNode });
@@ -179,6 +187,8 @@ function html(location) {
       compiler = new Template(output, location, this);
       templateCache.set(templateKey, compiler);
     }
+
+    return compiler;
   };
 }
 

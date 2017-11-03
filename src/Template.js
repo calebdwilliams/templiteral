@@ -15,6 +15,13 @@ export class Template {
     this._init(base);
   }
 
+  disconnect() {
+    this.eventHandlers.forEach((eventName, index) => {
+      const node = this.eventHandlers[index].currentNode;
+      node.removeEventListener(eventName, node._boundEvents);
+    });
+  }
+
   paint() {
     this.location.appendChild(this.node);
   }
@@ -28,7 +35,7 @@ export class Template {
   }
 
   _parseUpdates(walker) {
-    const updatedParts = this._walk(walker, new Map());
+    const updatedParts = this._walk(walker, new Map(), false);
     this.parts.forEach((part, index) => part.update(updatedParts.get(index)));
   }
 
@@ -37,12 +44,12 @@ export class Template {
     baseTemplate.innerHTML = base;
     const baseNode = document.importNode(baseTemplate.content, true);
     const walker = document.createTreeWalker(baseNode, 133, null, false);
-    this._walk(walker, this.parts);
+    this._walk(walker, this.parts, true);
     this.node = baseNode;
     this.paint();
   }
 
-  _walk(walker, parts) {
+  _walk(walker, parts, setup) {
     let index = -1;
 
     while (walker.nextNode()) {
@@ -59,7 +66,7 @@ export class Template {
             if (attribute.value.match(valuePattern) || attribute.name.match(propPattern)) {
               boundAttrs.set(attribute.name, attribute);
             }
-            if (attribute.name.match(eventPattern)) {
+            if (setup && attribute.name.match(eventPattern)) {
               const eventName = attribute.name.substring(1, attribute.name.length - 1);
               boundEvents.set(eventName, attribute.value);
               this.eventHandlers.push({ eventName, currentNode });

@@ -13,12 +13,13 @@ export class AttributeNode {
 
   addListeners() {
     this.boundEvents.forEach((eventHandler, eventName) => {
-      const events = eventHandler.split(/\;/);
+      const events = eventHandler.split(/;/);
       const eventsSafe = events.filter(event => event.match(sanitizePattern));
-      const sanitizedEvents = eventsSafe.join('; ')
+      const sanitizedEvents = eventsSafe.join('; ');
       if (eventHandler.match(sanitizePattern)) {
-        const handler = new Function(sanitizedEvents);
-        this.node.addEventListener(eventName, handler.bind(this.context));
+        const handler = new Function(sanitizedEvents).bind(this.context);
+        this.node.addEventListener(eventName, handler);
+        this.node._boundEvents = handler;
       }
 
       if (eventsSafe.length < events.length) {
@@ -49,7 +50,6 @@ export class AttributeNode {
       this.node[attributeName] = newAttr.value;
       this.node.setAttribute(attributeName, newAttr.value);
     } else {
-      this.node
       this.node.removeAttribute(attributeName);
     }
   }
