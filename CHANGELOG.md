@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.2.1"></a>
+## [1.2.1](https://github.com/calebdwilliams/templiteral/compare/v1.2.0...v1.2.1) (2017-11-03)
+
+
+### Bug Fixes
+
+* **AttributeNode:** Removes event listeners on Template.disconnect() ([8ae75b4](https://github.com/calebdwilliams/templiteral/commit/8ae75b4))
+
+
+
 <a name="1.2.0"></a>
 # [1.2.0](https://github.com/calebdwilliams/templiteral/compare/v1.1.3...v1.2.0) (2017-11-03)
 
