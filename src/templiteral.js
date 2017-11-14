@@ -16,7 +16,7 @@ function html(location) {
       compiler = new Template(output, location, this);
       templateCache.set(templateKey, compiler);
     }
-
+    location.__templiteralCompiler = compiler;
     return compiler;
   };
 }
@@ -27,4 +27,9 @@ export function templiteral(location, context = this) {
     return Reflect.apply(renderer, context, args);
   }
   return render.bind(context);
+}
+
+export function registerElements(elements) {
+  elements.forEach(elementClass =>
+    customElements.define(elementClass.tagName, elementClass));
 }
