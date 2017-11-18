@@ -47,8 +47,9 @@ export class AttributeNode {
   updateAttributes(name, newAttr) {
     const attributeName = name.slice(1, -1);
     if (newAttr.value) {
-      this.node[attributeName] = newAttr.value;
-      this.node.setAttribute(attributeName, newAttr.value);
+      const parsedValue = JSON.parse(decodeURIComponent(newAttr.value));
+      this.node[attributeName] = parsedValue;
+      typeof parsedValue === 'object' ? this.node.setAttribute(attributeName, newAttr.value) : null;
     } else {
       this.node.removeAttribute(attributeName);
     }

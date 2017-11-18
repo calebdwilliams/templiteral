@@ -2,10 +2,17 @@ import { Template } from './Template.js';
 
 const templateCache = new Map();
 
+function parseObject(value) {
+  if (typeof value === 'object') {
+    return encodeURIComponent(JSON.stringify(value));
+  }
+  return value;
+}
+
 function html(location) {
   return function(strings, ...values) {
     const output = strings.map((string, index) =>
-      `${string ? string : ''}${values[index] ? '---!{' + values[index] + '}!---' : ''}`).join('');
+      `${string ? string : ''}${values[index] ? '---!{' + parseObject(values[index]) + '}!---' : ''}`).join('');
     const templateKey = btoa(strings.join(''));
 
     let compiler = templateCache.get(templateKey);

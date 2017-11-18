@@ -41,7 +41,7 @@ class AttributeNode {
       if (eventHandler.match(sanitizePattern)) {
         const handler = new Function(sanitizedEvents).bind(this.context);
         this.node.addEventListener(eventName, handler);
-        this.node._boundEvents = { handler };
+        this.node._boundEvents = handler;
       }
 
       if (eventsSafe.length < events.length) {
@@ -69,7 +69,10 @@ class AttributeNode {
   updateAttributes(name, newAttr) {
     const attributeName = name.slice(1, -1);
     if (newAttr.value) {
-      this.node[attributeName] = newAttr.value;
+      const parsedValue = JSON.parse(decodeURIComponent(newAttr.value));
+      console.log(parsedValue);
+      this.node[attributeName] = parsedValue;
+      console.dir(this.node);
       this.node.setAttribute(attributeName, newAttr.value);
     } else {
       this.node.removeAttribute(attributeName);
@@ -82,8 +85,8 @@ class Template {
     const template = document.createElement('template');
     const content = base.replace(startSeparator, '').replace(endSeparator, '');
     template.innerHTML = content;
-    this.node = document.importNode(template.content, true);
     this.parts = new Map();
+    this.templiteralParts = new Set();
     this.eventHandlers = [];
     this.location = location;
     this.context = context;
@@ -93,13 +96,12 @@ class Template {
   disconnect() {
     this.eventHandlers.forEach((eventName, index) => {
       const node = this.eventHandlers[index].currentNode;
-      node.removeEventListener(eventName, node._boundEvents.handler);
-      console.log(node._boundEvents);
+      node.removeEventListener(eventName, node._boundEvents);
     });
   }
 
-  paint() {
-    this.location.appendChild(this.node);
+  paint(node) {
+    this.location.appendChild(node);
   }
 
   update(content) {
@@ -121,8 +123,7 @@ class Template {
     const baseNode = document.importNode(baseTemplate.content, true);
     const walker = document.createTreeWalker(baseNode, 133, null, false);
     this._walk(walker, this.parts, true);
-    this.node = baseNode;
-    this.paint();
+    this.paint(baseNode);
   }
 
   _walk(walker, parts, setup) {
@@ -173,10 +174,17 @@ class Template {
 
 const templateCache = new Map();
 
+function parseObject(value) {
+  if (typeof value === 'object') {
+    return encodeURIComponent(JSON.stringify(value));
+  }
+  return value;
+}
+
 function html(location) {
   return function(strings, ...values) {
     const output = strings.map((string, index) =>
-      `${string ? string : ''}${values[index] ? '---!{' + values[index] + '}!---' : ''}`).join('');
+      `${string ? string : ''}${values[index] ? '---!{' + parseObject(values[index]) + '}!---' : ''}`).join('');
     const templateKey = btoa(strings.join(''));
 
     let compiler = templateCache.get(templateKey);
@@ -187,7 +195,7 @@ function html(location) {
       compiler = new Template(output, location, this);
       templateCache.set(templateKey, compiler);
     }
-
+    location.__templiteralCompiler = compiler;
     return compiler;
   };
 }
@@ -200,4 +208,9 @@ function templiteral(location, context = this) {
   return render.bind(context);
 }
 
-export { templiteral };
+function registerElements(elements) {
+  elements.forEach(elementClass =>
+    customElements.define(elementClass.tagName, elementClass));
+}
+
+export { templiteral, registerElements };
