@@ -72,9 +72,8 @@ class AttributeNode {
   updateAttributes(name, newAttr) {
     const attributeName = name.slice(1, -1);
     if (newAttr.value) {
-      const parsedValue = JSON.parse(decodeURIComponent(newAttr.value));
-      this.node[attributeName] = parsedValue;
-      typeof parsedValue === 'object' ? this.node.setAttribute(attributeName, newAttr.value) : null;
+      this.node[attributeName] = newAttr.value;
+      this.node.setAttribute(attributeName, newAttr.value);
     } else {
       this.node.removeAttribute(attributeName);
     }
@@ -133,40 +132,45 @@ class Template {
     while (walker.nextNode()) {
       index += 1;
       const { currentNode } = walker;
-      switch (currentNode.nodeType) {
-      case 1: {
-        const { attributes } = currentNode;
-        if (attributes.length) {
-          const boundAttrs = new Map();
-          const boundEvents = new Map();
-          for (let i = 0; i < attributes.length; i += 1) {
-            const attribute = attributes[i];
-            if (attribute.value.match(valuePattern) || attribute.name.match(propPattern)) {
-              boundAttrs.set(attribute.name, attribute);
+      if (!currentNode.__templiteralCompiler) {
+        switch (currentNode.nodeType) {
+        case 1: {
+          const { attributes } = currentNode;
+          if (attributes.length) {
+            const boundAttrs = new Map();
+            const boundEvents = new Map();
+            for (let i = 0; i < attributes.length; i += 1) {
+              const attribute = attributes[i];
+              if (attribute.value.match(valuePattern) || attribute.name.match(propPattern)) {
+                boundAttrs.set(attribute.name, attribute);
+              }
+              if (setup && attribute.name.match(eventPattern)) {
+                const eventName = attribute.name.substring(1, attribute.name.length - 1);
+                boundEvents.set(eventName, attribute.value);
+                this.eventHandlers.push({ eventName, currentNode });
+              }
             }
-            if (setup && attribute.name.match(eventPattern)) {
-              const eventName = attribute.name.substring(1, attribute.name.length - 1);
-              boundEvents.set(eventName, attribute.value);
-              this.eventHandlers.push({ eventName, currentNode });
+            if (boundAttrs.size >= 1 || boundEvents.size >= 1 || this.parts.has(index)) {
+              const attrNode = new AttributeNode(currentNode, index, boundAttrs, boundEvents, this.context);
+              parts.set(index, attrNode);
+              attrNode.cleanUp();
             }
           }
-          if (boundAttrs.size >= 1 || boundEvents.size >= 1 || this.parts.has(index)) {
-            const attrNode = new AttributeNode(currentNode, index, boundAttrs, boundEvents, this.context);
-            parts.set(index, attrNode);
-            attrNode.cleanUp();
+          break;
+        }
+        case 3: {
+          if (currentNode.textContent && currentNode.textContent.match(valuePattern) || this.parts.has(index)) {
+            const contentNode = new ContentNode(currentNode, index);
+            parts.set(index, contentNode);
+            contentNode.cleanUp();
           }
+          break;
         }
-        break;
-      }
-      case 3: {
-        if (currentNode.textContent && currentNode.textContent.match(valuePattern) || this.parts.has(index)) {
-          const contentNode = new ContentNode(currentNode, index);
-          parts.set(index, contentNode);
-          contentNode.cleanUp();
         }
-        break;
+      } else {
+        this.templiteralParts.add(currentNode);
       }
-      }
+
     }
 
     return parts;
@@ -175,17 +179,10 @@ class Template {
 
 const templateCache = new Map();
 
-function parseObject(value) {
-  if (typeof value === 'object') {
-    return encodeURIComponent(JSON.stringify(value));
-  }
-  return value;
-}
-
 function html(location) {
   return function(strings, ...values) {
     const output = strings.map((string, index) =>
-      `${string ? string : ''}${values[index] ? '---!{' + parseObject(values[index]) + '}!---' : ''}`).join('');
+      `${string ? string : ''}${values[index] ? '---!{' + values[index] + '}!---' : ''}`).join('');
     const templateKey = btoa(strings.join(''));
 
     let compiler = templateCache.get(templateKey);

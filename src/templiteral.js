@@ -2,38 +2,20 @@ import { Template } from './Template.js';
 
 const templateCache = new Map();
 
-function parseObject(value) {
-  if (typeof value === 'object') {
-    return encodeURIComponent(JSON.stringify(value));
-  }
-  return value;
-}
+export function templiteral(location = this, context = this) {
+  location.shadowRoot ? location = location.shadowRoot : null;
 
-function html(location) {
-  return function(strings, ...values) {
-    const output = strings.map((string, index) =>
-      `${string ? string : ''}${values[index] ? '---!{' + parseObject(values[index]) + '}!---' : ''}`).join('');
+  return (strings, ...values) => {
     const templateKey = btoa(strings.join(''));
-
     let compiler = templateCache.get(templateKey);
 
     if (compiler) {
-      compiler.update(output);
+      compiler.update(values);
     } else {
-      compiler = new Template(output, location, this);
+      compiler = new Template(strings, values, location, context);
       templateCache.set(templateKey, compiler);
     }
-    location.__templiteralCompiler = compiler;
-    return compiler;
   };
-}
-
-export function templiteral(location, context = this) {
-  function render(...args) {
-    const renderer = Reflect.apply(html, context, [location]);
-    return Reflect.apply(renderer, context, args);
-  }
-  return render.bind(context);
 }
 
 export function registerElements(elements) {

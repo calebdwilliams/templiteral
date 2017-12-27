@@ -1,95 +1,97 @@
 import { ContentNode } from './ContentNode.js';
 import { AttributeNode } from './AttributeNode.js';
-import { valuePattern, eventPattern, propPattern, startSeparator, endSeparator } from './patterns.js';
+import { valuePattern, eventPattern, propPattern } from './patterns.js';
 
 export class Template {
-  constructor(base, location, context) {
-    const template = document.createElement('template');
-    const content = base.replace(startSeparator, '').replace(endSeparator, '');
-    template.innerHTML = content;
-    this.parts = new Map();
-    this.templiteralParts = new Set();
-    this.eventHandlers = [];
+  constructor(strings, values, location, context) {
+    this.strings = strings;
+    this.values = values;
+    this.oldValues = values.map((value, index) => `---!{${index}}!---`);
     this.location = location;
     this.context = context;
-    this._init(base);
+    this.parts = [];
+    this.templiteralParts = new Set();
+    this.eventHandlers = [];
+    this._init();
   }
 
-  disconnect() {
-    this.eventHandlers.forEach((eventName, index) => {
-      const node = this.eventHandlers[index].currentNode;
-      node.removeEventListener(eventName, node._boundEvents);
+  _append(node) {
+    this.parts.forEach((part, index) => {
+      if (part instanceof ContentNode) {
+        part.setValue(this.values[index], this.oldValues[index]);
+      } else if (part instanceof AttributeNode) {
+        part.update(this.values, this.oldValues);
+      }
     });
-  }
-
-  paint(node) {
     this.location.appendChild(node);
   }
 
-  update(content) {
-    const template = document.createElement('template');
-    template.innerHTML = content;
-    const newNode = document.importNode(template.content, true);
-    const newNodeWalker = document.createTreeWalker(newNode, 133, null, false);
-    this._parseUpdates(newNodeWalker);
-  }
+  _init() {
+    const base = this.strings.map((string, index) =>
+      `${string ? string : ''}${this.values[index] ? '---!{' + index + '}!---' : ''}`
+    ).join('');
+    const fragment = document.createElement('template');
+    fragment.innerHTML = base;
+    const baseNode = document.importNode(fragment.content, true);
 
-  _parseUpdates(walker) {
-    const updatedParts = this._walk(walker, new Map(), false);
-    this.parts.forEach((part, index) => part.update(updatedParts.get(index)));
-  }
-
-  _init(base) {
-    const baseTemplate = document.createElement('template');
-    baseTemplate.innerHTML = base;
-    const baseNode = document.importNode(baseTemplate.content, true);
     const walker = document.createTreeWalker(baseNode, 133, null, false);
     this._walk(walker, this.parts, true);
-    this.paint(baseNode);
+    this._append(baseNode);
   }
 
   _walk(walker, parts, setup) {
     let index = -1;
-
     while (walker.nextNode()) {
-      index += 1;
       const { currentNode } = walker;
-      switch (currentNode.nodeType) {
-      case 1: {
-        const { attributes } = currentNode;
-        if (attributes.length) {
-          const boundAttrs = new Map();
-          const boundEvents = new Map();
-          for (let i = 0; i < attributes.length; i += 1) {
-            const attribute = attributes[i];
-            if (attribute.value.match(valuePattern) || attribute.name.match(propPattern)) {
-              boundAttrs.set(attribute.name, attribute);
+      if (!currentNode.__templiteralCompiler) {
+        switch (currentNode.nodeType) {
+        case 1: {
+          const { attributes } = currentNode;
+          if (attributes.length) {
+            const boundAttrs = new Map();
+            const boundEvents = new Map();
+            for (let i = 0; i < attributes.length; i += 1) {
+              const attribute = attributes[i];
+              if (attribute.value.match(valuePattern) || attribute.name.match(propPattern)) {
+                boundAttrs.set(attribute.name, attribute);
+              }
+              if (setup && attribute.name.match(eventPattern)) {
+                const eventName = attribute.name.substring(1, attribute.name.length - 1);
+                boundEvents.set(eventName, attribute.value);
+                this.eventHandlers.push({ eventName, currentNode });
+              }
             }
-            if (setup && attribute.name.match(eventPattern)) {
-              const eventName = attribute.name.substring(1, attribute.name.length - 1);
-              boundEvents.set(eventName, attribute.value);
-              this.eventHandlers.push({ eventName, currentNode });
+            if (boundAttrs.size >= 1 || boundEvents.size >= 1) {
+              index += 1;
+              const attrNode = new AttributeNode(currentNode, boundAttrs, boundEvents, this.context, index);
+              parts.push(attrNode);
             }
           }
-          if (boundAttrs.size >= 1 || boundEvents.size >= 1 || this.parts.has(index)) {
-            const attrNode = new AttributeNode(currentNode, index, boundAttrs, boundEvents, this.context);
-            parts.set(index, attrNode);
-            attrNode.cleanUp();
+          break;
+        }
+        case 3: {
+          index += 1;
+          if (currentNode.textContent && currentNode.textContent.match(valuePattern)) {
+            index += 1;
+            const contentNode = new ContentNode(currentNode, index);
+            parts.push(contentNode);
           }
+          break;
         }
-        break;
-      }
-      case 3: {
-        if (currentNode.textContent && currentNode.textContent.match(valuePattern) || this.parts.has(index)) {
-          const contentNode = new ContentNode(currentNode, index);
-          parts.set(index, contentNode);
-          contentNode.cleanUp();
         }
-        break;
-      }
+      } else {
+        this.templiteralParts.add(currentNode);
       }
     }
-
     return parts;
+  }
+
+  update(values) {
+    this.oldValues = this.values;
+    this.values = values;
+
+    this.parts.forEach((part) => {
+      part.update(values, this.oldValues);
+    });
   }
 }

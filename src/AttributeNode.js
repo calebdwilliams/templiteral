@@ -1,12 +1,15 @@
 import { propPattern, sanitizePattern, startSeparator, endSeparator } from './patterns.js';
 
 export class AttributeNode {
-  constructor(node, index, boundAttrs, boundEvents, context) {
+  constructor(node, boundAttrs, boundEvents, context, index) {
     this.node = node;
-    this.index = index;
     this.boundAttrs = boundAttrs;
     this.boundEvents = boundEvents;
     this.context = context;
+    this.index = index;
+    this.boundAttrs.forEach(attribute => {
+      attribute.base = attribute.value || `false`;
+    });
 
     this.addListeners();
   }
@@ -33,25 +36,52 @@ export class AttributeNode {
       attr.value = attr.value.replace(startSeparator, '').replace(endSeparator, ''));
   }
 
-  update(newNode) {
-    this.boundAttrs.forEach(attr => {
-      const newAttr = newNode.boundAttrs.get(attr.name);
-      newAttr && attr.value !== newAttr.value ? attr.value = newAttr.value : null;
-
-      if (attr.name.match(propPattern)) {
-        this.updateAttributes(attr.name, newAttr);
-      }
-    });
-  }
-
   updateAttributes(name, newAttr) {
     const attributeName = name.slice(1, -1);
     if (newAttr.value) {
-      const parsedValue = JSON.parse(decodeURIComponent(newAttr.value));
-      this.node[attributeName] = parsedValue;
-      typeof parsedValue === 'object' ? this.node.setAttribute(attributeName, newAttr.value) : null;
+      this.node[attributeName] = newAttr.value;
+      this.node.setAttribute(attributeName, newAttr.value);
     } else {
       this.node.removeAttribute(attributeName);
     }
+  }
+
+  update(values, oldValues) {
+    this.boundAttrs.forEach(attribute => {
+      const bases = attribute.base.match(/---\!{*.}\!---/g) || [];
+      const baseIndicies = bases.map(base => +base.replace('---!{', '').replace('}!---', ''));
+      let attributeValue = attribute.base;
+      for (let i = 0; i < baseIndicies.length; i += 1) {
+        const value = values[baseIndicies[i]];
+        attributeValue = attributeValue.replace(`---!{${baseIndicies[i]}}!---`, value);
+      }
+      attribute.value = attributeValue;
+    //   attribute.value.split(' ')
+    //     .forEach((oldValue, i) => {
+    //       const index = oldValues.indexOf(oldValue);
+    //       console.log(this.index, index, values, oldValues, values[index])
+    //       // if (attribute.name === 'class' && index > -1) {
+    //       //   try {
+    //       //     this.node.classList.replace(oldValue, values[index]);
+    //       //   } catch(error) {
+    //       //     // this.node.classList.replace
+    //       //   }
+    //       // } else if (index > -1) {
+    //       if (index > -1) {
+    //         attribute.value = attribute.value.replace(oldValue, values[index]);
+    //       }
+
+    //       if (attribute.name.match(propPattern)) {
+    //         const attributeName = attribute.name.replace(/\[|\]/g, '');
+    //         this.node[attributeName] = values[index];
+    //         console.log(attributeName, values[index], oldValue)
+    //         console.log(attribute.base)
+    //         values[index] ?
+    //           this.node.setAttribute(attributeName, values[index]) :
+    //           this.node.removeAttribute(attributeName);
+    //       }
+    //       // }
+    //     });
+    });
   }
 }
