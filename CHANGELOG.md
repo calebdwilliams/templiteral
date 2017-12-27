@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.0.0"></a>
+# [2.0.0](https://github.com/calebdwilliams/templiteral/compare/v1.2.2...v2.0.0) (2017-12-27)
+
+
+### Features
+
+* **templiteral:** v2 refactor ([cca2c71](https://github.com/calebdwilliams/templiteral/commit/cca2c71))
+
+
+### BREAKING CHANGES
+
+* **templiteral:** New compiler
+
+
+
 <a name="1.2.2"></a>
 ## [1.2.2](https://github.com/calebdwilliams/templiteral/compare/v1.2.1...v1.2.2) (2017-11-14)
 
