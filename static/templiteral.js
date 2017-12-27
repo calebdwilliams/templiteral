@@ -41,9 +41,7 @@ class AttributeNode {
     this.boundEvents = boundEvents;
     this.context = context;
     this.index = index;
-    this.boundAttrs.forEach(attribute => {
-      attribute.base = attribute.value || `false`;
-    });
+    this.boundAttrs.forEach(attribute => attribute.base = attribute.value);
 
     this.addListeners();
   }
@@ -80,6 +78,16 @@ class AttributeNode {
     }
   }
 
+  updateProperty(attribute, attributeValue) {
+    const attributeName = attribute.name.replace(/\[|\]/g, '');
+    this.node[attributeName] = attributeValue;
+    if (attributeValue && attributeValue !== 'false') {
+      this.node.setAttribute(attributeName, attributeValue);        
+    } else {
+      this.node.removeAttribute(attributeName);
+    }
+  }
+
   update(values, oldValues) {
     this.boundAttrs.forEach(attribute => {
       const bases = attribute.base.match(/---\!{*.}\!---/g) || [];
@@ -90,32 +98,9 @@ class AttributeNode {
         attributeValue = attributeValue.replace(`---!{${baseIndicies[i]}}!---`, value);
       }
       attribute.value = attributeValue;
-    //   attribute.value.split(' ')
-    //     .forEach((oldValue, i) => {
-    //       const index = oldValues.indexOf(oldValue);
-    //       console.log(this.index, index, values, oldValues, values[index])
-    //       // if (attribute.name === 'class' && index > -1) {
-    //       //   try {
-    //       //     this.node.classList.replace(oldValue, values[index]);
-    //       //   } catch(error) {
-    //       //     // this.node.classList.replace
-    //       //   }
-    //       // } else if (index > -1) {
-    //       if (index > -1) {
-    //         attribute.value = attribute.value.replace(oldValue, values[index]);
-    //       }
-
-    //       if (attribute.name.match(propPattern)) {
-    //         const attributeName = attribute.name.replace(/\[|\]/g, '');
-    //         this.node[attributeName] = values[index];
-    //         console.log(attributeName, values[index], oldValue)
-    //         console.log(attribute.base)
-    //         values[index] ?
-    //           this.node.setAttribute(attributeName, values[index]) :
-    //           this.node.removeAttribute(attributeName);
-    //       }
-    //       // }
-    //     });
+      if (attribute.name.match(propPattern)) {
+        this.updateProperty(attribute, attributeValue);
+      }
     });
   }
 }
@@ -146,7 +131,7 @@ class Template {
 
   _init() {
     const base = this.strings.map((string, index) =>
-      `${string ? string : ''}${this.values[index] ? '---!{' + index + '}!---' : ''}`
+      `${string ? string : ''}${this.values[index] !== undefined ? '---!{' + index + '}!---' : ''}`
     ).join('');
     const fragment = document.createElement('template');
     fragment.innerHTML = base;

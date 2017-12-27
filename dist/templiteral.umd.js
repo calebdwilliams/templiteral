@@ -12,29 +12,42 @@ const startSeparator = /---!\{/gi;
 const endSeparator = /\}!---/gi;
 
 class ContentNode {
-  constructor(node, index) {
+  constructor(node) {
     this.node = node;
-    this.index = index;
+    this.base = node.nodeValue || '';
+    this.index = +this.base
+      .match(valuePattern)[0]
+      .replace(startSeparator, '')
+      .replace(endSeparator, '');
   }
 
-  cleanUp() {
-    this.node.textContent = this.node.textContent.replace(startSeparator, '').replace(endSeparator, '');
+  set value(_value) {
+    const newValue = this.base.replace(valuePattern, _value);
+    this.value !== newValue ?
+      this.node.nodeValue = newValue : null;
   }
 
-  update(newNode) {
-    if (this.node.nodeValue !== newNode.node.nodeValue) {
-      this.node.nodeValue = newNode.node.nodeValue;
-    }
+  get value() {
+    return this.node.nodeValue;
+  }
+
+  setValue(value = '') {
+    this.node.nodeValue = this.base.replace(valuePattern, value);
+  }
+
+  update(values) {
+    this.value = values[this.index];
   }
 }
 
 class AttributeNode {
-  constructor(node, index, boundAttrs, boundEvents, context) {
+  constructor(node, boundAttrs, boundEvents, context, index) {
     this.node = node;
-    this.index = index;
     this.boundAttrs = boundAttrs;
     this.boundEvents = boundEvents;
     this.context = context;
+    this.index = index;
+    this.boundAttrs.forEach(attribute => attribute.base = attribute.value);
 
     this.addListeners();
   }
@@ -61,17 +74,6 @@ class AttributeNode {
       attr.value = attr.value.replace(startSeparator, '').replace(endSeparator, ''));
   }
 
-  update(newNode) {
-    this.boundAttrs.forEach(attr => {
-      const newAttr = newNode.boundAttrs.get(attr.name);
-      newAttr && attr.value !== newAttr.value ? attr.value = newAttr.value : null;
-
-      if (attr.name.match(propPattern)) {
-        this.updateAttributes(attr.name, newAttr);
-      }
-    });
-  }
-
   updateAttributes(name, newAttr) {
     const attributeName = name.slice(1, -1);
     if (newAttr.value) {
@@ -81,59 +83,74 @@ class AttributeNode {
       this.node.removeAttribute(attributeName);
     }
   }
+
+  updateProperty(attribute, attributeValue) {
+    const attributeName = attribute.name.replace(/\[|\]/g, '');
+    this.node[attributeName] = attributeValue;
+    if (attributeValue && attributeValue !== 'false') {
+      this.node.setAttribute(attributeName, attributeValue);        
+    } else {
+      this.node.removeAttribute(attributeName);
+    }
+  }
+
+  update(values, oldValues) {
+    this.boundAttrs.forEach(attribute => {
+      const bases = attribute.base.match(/---\!{*.}\!---/g) || [];
+      const baseIndicies = bases.map(base => +base.replace('---!{', '').replace('}!---', ''));
+      let attributeValue = attribute.base;
+      for (let i = 0; i < baseIndicies.length; i += 1) {
+        const value = values[baseIndicies[i]];
+        attributeValue = attributeValue.replace(`---!{${baseIndicies[i]}}!---`, value);
+      }
+      attribute.value = attributeValue;
+      if (attribute.name.match(propPattern)) {
+        this.updateProperty(attribute, attributeValue);
+      }
+    });
+  }
 }
 
 class Template {
-  constructor(base, location, context) {
-    const template = document.createElement('template');
-    const content = base.replace(startSeparator, '').replace(endSeparator, '');
-    template.innerHTML = content;
-    this.parts = new Map();
-    this.templiteralParts = new Set();
-    this.eventHandlers = [];
+  constructor(strings, values, location, context) {
+    this.strings = strings;
+    this.values = values;
+    this.oldValues = values.map((value, index) => `---!{${index}}!---`);
     this.location = location;
     this.context = context;
-    this._init(base);
+    this.parts = [];
+    this.templiteralParts = new Set();
+    this.eventHandlers = [];
+    this._init();
   }
 
-  disconnect() {
-    this.eventHandlers.forEach((eventName, index) => {
-      const node = this.eventHandlers[index].currentNode;
-      node.removeEventListener(eventName, node._boundEvents);
+  _append(node) {
+    this.parts.forEach((part, index) => {
+      if (part instanceof ContentNode) {
+        part.setValue(this.values[index], this.oldValues[index]);
+      } else if (part instanceof AttributeNode) {
+        part.update(this.values, this.oldValues);
+      }
     });
-  }
-
-  paint(node) {
     this.location.appendChild(node);
   }
 
-  update(content) {
-    const template = document.createElement('template');
-    template.innerHTML = content;
-    const newNode = document.importNode(template.content, true);
-    const newNodeWalker = document.createTreeWalker(newNode, 133, null, false);
-    this._parseUpdates(newNodeWalker);
-  }
+  _init() {
+    const base = this.strings.map((string, index) =>
+      `${string ? string : ''}${this.values[index] !== undefined ? '---!{' + index + '}!---' : ''}`
+    ).join('');
+    const fragment = document.createElement('template');
+    fragment.innerHTML = base;
+    const baseNode = document.importNode(fragment.content, true);
 
-  _parseUpdates(walker) {
-    const updatedParts = this._walk(walker, new Map(), false);
-    this.parts.forEach((part, index) => part.update(updatedParts.get(index)));
-  }
-
-  _init(base) {
-    const baseTemplate = document.createElement('template');
-    baseTemplate.innerHTML = base;
-    const baseNode = document.importNode(baseTemplate.content, true);
     const walker = document.createTreeWalker(baseNode, 133, null, false);
     this._walk(walker, this.parts, true);
-    this.paint(baseNode);
+    this._append(baseNode);
   }
 
   _walk(walker, parts, setup) {
     let index = -1;
-
     while (walker.nextNode()) {
-      index += 1;
       const { currentNode } = walker;
       if (!currentNode.__templiteralCompiler) {
         switch (currentNode.nodeType) {
@@ -153,19 +170,20 @@ class Template {
                 this.eventHandlers.push({ eventName, currentNode });
               }
             }
-            if (boundAttrs.size >= 1 || boundEvents.size >= 1 || this.parts.has(index)) {
-              const attrNode = new AttributeNode(currentNode, index, boundAttrs, boundEvents, this.context);
-              parts.set(index, attrNode);
-              attrNode.cleanUp();
+            if (boundAttrs.size >= 1 || boundEvents.size >= 1) {
+              index += 1;
+              const attrNode = new AttributeNode(currentNode, boundAttrs, boundEvents, this.context, index);
+              parts.push(attrNode);
             }
           }
           break;
         }
         case 3: {
-          if (currentNode.textContent && currentNode.textContent.match(valuePattern) || this.parts.has(index)) {
+          index += 1;
+          if (currentNode.textContent && currentNode.textContent.match(valuePattern)) {
+            index += 1;
             const contentNode = new ContentNode(currentNode, index);
-            parts.set(index, contentNode);
-            contentNode.cleanUp();
+            parts.push(contentNode);
           }
           break;
         }
@@ -173,40 +191,36 @@ class Template {
       } else {
         this.templiteralParts.add(currentNode);
       }
-
     }
-
     return parts;
+  }
+
+  update(values) {
+    this.oldValues = this.values;
+    this.values = values;
+
+    this.parts.forEach((part) => {
+      part.update(values, this.oldValues);
+    });
   }
 }
 
 const templateCache = new Map();
 
-function html(location) {
-  return function(strings, ...values) {
-    const output = strings.map((string, index) =>
-      `${string ? string : ''}${values[index] ? '---!{' + values[index] + '}!---' : ''}`).join('');
-    const templateKey = btoa(strings.join(''));
+function templiteral(location = this, context = this) {
+  location.shadowRoot ? location = location.shadowRoot : null;
 
+  return (strings, ...values) => {
+    const templateKey = btoa(strings.join(''));
     let compiler = templateCache.get(templateKey);
 
     if (compiler) {
-      compiler.update(output);
+      compiler.update(values);
     } else {
-      compiler = new Template(output, location, this);
+      compiler = new Template(strings, values, location, context);
       templateCache.set(templateKey, compiler);
     }
-    location.__templiteralCompiler = compiler;
-    return compiler;
   };
-}
-
-function templiteral(location, context = this) {
-  function render(...args) {
-    const renderer = Reflect.apply(html, context, [location]);
-    return Reflect.apply(renderer, context, args);
-  }
-  return render.bind(context);
 }
 
 function registerElements(elements) {

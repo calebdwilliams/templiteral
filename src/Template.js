@@ -28,7 +28,7 @@ export class Template {
 
   _init() {
     const base = this.strings.map((string, index) =>
-      `${string ? string : ''}${this.values[index] ? '---!{' + index + '}!---' : ''}`
+      `${string ? string : ''}${this.values[index] !== undefined ? '---!{' + index + '}!---' : ''}`
     ).join('');
     const fragment = document.createElement('template');
     fragment.innerHTML = base;
