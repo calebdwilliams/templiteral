@@ -3,13 +3,21 @@
   "author": "Caleb D. Williams <caleb.d.williams@gmail.com>",
   "keywords": [
     "template literal",
+    "template string",
     "javascript",
-    "html"
+    "html",
+    "template",
+    "DOM",
+    "render",
+    "reactive",
+    "web component",
+    "custom element",
+    "customElements"
   ],
   "version": "2.0.0",
   "description": "",
   "main": "dist/templiteral.js",
-  "module": "dist/templiteral.esm.js",
+  "module": "dist/templiteral.es.js",
   "scripts": {
     "prebuild": "npm run clean",
     "build": "rollup -c",

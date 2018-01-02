@@ -92,9 +92,9 @@ class AttributeNode {
     }
   }
 
-  update(values, oldValues) {
+  update(values) {
     this.boundAttrs.forEach(attribute => {
-      const bases = attribute.base.match(/---\!{*.}\!---/g) || [];
+      const bases = attribute.base.match(/---!{*.}!---/g) || [];
       const baseIndicies = bases.map(base => +base.replace('---!{', '').replace('}!---', ''));
       let attributeValue = attribute.base;
       for (let i = 0; i < baseIndicies.length; i += 1) {

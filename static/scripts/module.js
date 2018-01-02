@@ -76,6 +76,9 @@ class MyEl extends HTMLElement {
   render() {
     this._ = this.templiteral()`
       <style>
+        * {
+          font-family: Optimist
+        }
         .everyone {
           color: tomato;
         }
@@ -97,14 +100,16 @@ class MyEl extends HTMLElement {
         <h2>Test</h2>
       </div>
       <p [contentEditable]="${this.pContentEditable}">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean sapien magna, aliquet non massa dapibus, convallis porta sem. Phasellus laoreet, turpis et feugiat malesuada, quam magna tincidunt diam, at tempor sapien nisl nec elit. Curabitur suscipit mi eu dolor tempor luctus eu vel tortor.</p>
-      ${this.pContentEditable}
+      
+      <p>${this.pContentEditable} — ${this.username}</p>
+
       <p>Vivamus efficitur nulla nec nulla faucibus ultricies. Sed sed lacus vel nisl mattis aliquet quis rhoncus magna. Etiam aliquam eget leo nec tincidunt. Maecenas lacinia consectetur augue, vitae euismod augue eleifend quis. Mauris et aliquam velit.</p>
 
       <p>Quisque sit amet lorem in mauris viverra facilisis. Vestibulum pharetra elit eget eleifend tempor.</p>
 
       <form (submit)="this.update(event)">
         <label for="username">User name</label>
-        <input id="username" type="text" name="username" (input)="this.updateName()">
+        <input id="username" type="text" name="username" (input)="this.updateName()" [value]="${this.username}">
 
         <button>Submit</button>
       </form>

@@ -1,14 +1,18 @@
-import { propPattern, sanitizePattern, startSeparator, endSeparator } from './patterns.js';
+import { propPattern, sanitizePattern, startSeparator, endSeparator, valuePattern } from './patterns.js';
 
 export class AttributeNode {
-  constructor(node, boundAttrs, boundEvents, context, index) {
+  constructor(node, boundAttrs, boundEvents, context, compiler) {
     this.node = node;
     this.boundAttrs = boundAttrs;
     this.boundEvents = boundEvents;
     this.context = context;
-    this.index = index;
-    this.boundAttrs.forEach(attribute => attribute.base = attribute.value);
-
+    this.compiler = compiler;
+    this.boundAttrs.forEach(attribute => {
+      attribute.base = attribute.value;
+      this.indicies = attribute.base.match(valuePattern).map(index => +index.replace(startSeparator, '').replace(endSeparator, ''));
+      this.indicies.forEach(index => this.compiler.partIndicies.set(index, this));
+    });
+    
     this.addListeners();
   }
 
@@ -29,21 +33,6 @@ export class AttributeNode {
     });
   }
 
-  cleanUp() {
-    this.boundAttrs.forEach(attr =>
-      attr.value = attr.value.replace(startSeparator, '').replace(endSeparator, ''));
-  }
-
-  updateAttributes(name, newAttr) {
-    const attributeName = name.slice(1, -1);
-    if (newAttr.value) {
-      this.node[attributeName] = newAttr.value;
-      this.node.setAttribute(attributeName, newAttr.value);
-    } else {
-      this.node.removeAttribute(attributeName);
-    }
-  }
-
   updateProperty(attribute, attributeValue) {
     const attributeName = attribute.name.replace(/\[|\]/g, '');
     this.node[attributeName] = attributeValue;
@@ -54,13 +43,13 @@ export class AttributeNode {
     }
   }
 
-  update(values, oldValues) {
+  update(values) {
     this.boundAttrs.forEach(attribute => {
-      const bases = attribute.base.match(/---\!{*.}\!---/g) || [];
+      const bases = attribute.base.match(/---!{*.}!---/g) || [];
       const baseIndicies = bases.map(base => +base.replace('---!{', '').replace('}!---', ''));
       let attributeValue = attribute.base;
       for (let i = 0; i < baseIndicies.length; i += 1) {
-        const value = values[baseIndicies[i]];
+        const value = values[baseIndicies[i]] || '';
         attributeValue = attributeValue.replace(`---!{${baseIndicies[i]}}!---`, value);
       }
       attribute.value = attributeValue;

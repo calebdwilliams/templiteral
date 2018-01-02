@@ -10,19 +10,22 @@ export class Template {
     this.location = location;
     this.context = context;
     this.parts = [];
-    this.templiteralParts = new Set();
+    this.partIndicies = new Map();
+    
     this.eventHandlers = [];
     this._init();
   }
 
   _append(node) {
-    this.parts.forEach((part, index) => {
+    for (let i = 0; i < this.parts.length; i += 1) {
+      const part = this.parts[i];
       if (part instanceof ContentNode) {
-        part.setValue(this.values[index], this.oldValues[index]);
+        part.setValue(this.values, this.oldValues[i]);
       } else if (part instanceof AttributeNode) {
         part.update(this.values, this.oldValues);
       }
-    });
+    }
+
     this.location.appendChild(node);
   }
 
@@ -40,7 +43,6 @@ export class Template {
   }
 
   _walk(walker, parts, setup) {
-    let index = -1;
     while (walker.nextNode()) {
       const { currentNode } = walker;
       if (!currentNode.__templiteralCompiler) {
@@ -62,18 +64,15 @@ export class Template {
               }
             }
             if (boundAttrs.size >= 1 || boundEvents.size >= 1) {
-              index += 1;
-              const attrNode = new AttributeNode(currentNode, boundAttrs, boundEvents, this.context, index);
+              const attrNode = new AttributeNode(currentNode, boundAttrs, boundEvents, this.context, this);
               parts.push(attrNode);
             }
           }
           break;
         }
         case 3: {
-          index += 1;
           if (currentNode.textContent && currentNode.textContent.match(valuePattern)) {
-            index += 1;
-            const contentNode = new ContentNode(currentNode, index);
+            const contentNode = new ContentNode(currentNode, this);
             parts.push(contentNode);
           }
           break;
@@ -83,15 +82,16 @@ export class Template {
         this.templiteralParts.add(currentNode);
       }
     }
-    return parts;
   }
 
   update(values) {
     this.oldValues = this.values;
     this.values = values;
 
-    this.parts.forEach((part) => {
-      part.update(values, this.oldValues);
-    });
+    for (let i = 0; i < values.length; i += 1) {
+      if (values[i] !== this.oldValues[i]) {
+        this.partIndicies.get(i).update(values);
+      }
+    }
   }
 }

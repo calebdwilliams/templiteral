@@ -1,13 +1,15 @@
 import { startSeparator, endSeparator, valuePattern } from './patterns.js';
 
 export class ContentNode {
-  constructor(node) {
+  constructor(node, compiler) {
     this.node = node;
+    this.compiler = compiler;
     this.base = node.nodeValue || '';
-    this.index = +this.base
-      .match(valuePattern)[0]
-      .replace(startSeparator, '')
-      .replace(endSeparator, '');
+    this.indicies = this.base
+      .match(valuePattern)
+      .map(index => +index.replace(startSeparator, '').replace(endSeparator, ''));
+    
+    this.indicies.forEach(index => this.compiler.partIndicies.set(index, this));
   }
 
   set value(_value) {
@@ -20,11 +22,16 @@ export class ContentNode {
     return this.node.nodeValue;
   }
 
-  setValue(value = '') {
-    this.node.nodeValue = this.base.replace(valuePattern, value);
+  setValue(values = []) {
+    this.node.nodeValue = this.base.replace(/---!{*.}!---/g, (match) => 
+      values[+match.replace(startSeparator, '').replace(endSeparator, '')]
+    );
   }
 
   update(values) {
-    this.value = values[this.index];
+    this.node.nodeValue = this.base.replace(/---!{*.}!---/g, match => {
+      const value = values[+match.replace(startSeparator, '').replace(endSeparator, '')];
+      return value === null ? '' : value;
+    });
   }
 }

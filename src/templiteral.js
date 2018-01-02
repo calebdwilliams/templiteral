@@ -6,7 +6,7 @@ export function templiteral(location = this, context = this) {
   location.shadowRoot ? location = location.shadowRoot : null;
 
   return (strings, ...values) => {
-    const templateKey = btoa(strings.join(''));
+    const templateKey = (strings.join(''));
     let compiler = templateCache.get(templateKey);
 
     if (compiler) {
@@ -15,10 +15,7 @@ export function templiteral(location = this, context = this) {
       compiler = new Template(strings, values, location, context);
       templateCache.set(templateKey, compiler);
     }
-  };
-}
 
-export function registerElements(elements) {
-  elements.forEach(elementClass =>
-    customElements.define(elementClass.tagName, elementClass));
+    return compiler;
+  };
 }

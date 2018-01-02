@@ -1,4 +1,4 @@
-import { templit } from '../dist/templit.es';
+import { templiteral } from '../dist/templiteral.es';
 
 let myEl;
 
@@ -20,7 +20,7 @@ describe('templit', () => {
       constructor() {
         super();
         this._shadowRoot = this.attachShadow({ mode: 'open' });
-        this.renderTemplate = templit(this._shadowRoot, this);
+        this.templiteral = templiteral;
         this.pContentEditable = false;
       }
 
@@ -71,7 +71,7 @@ describe('templit', () => {
       }
 
       render() {
-        this.renderTemplate`
+        this.templiteral()`
           <style>
             .Caleb {
               color: tomato;
