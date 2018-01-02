@@ -1,6 +1,6 @@
 # Templiteral
 
-A light-weight, standards-compliant JavaScript to HTML renderer intended to allow authors to quickly and easily add bindings and selective re-renderings in their HTML files. Works best with the Web Components `customElements`.
+Templiteral is a light-weight tool to reactivly generate and update markup in-browser without the need for any framework or dependencies. Designed to work with the `customElements` spec, Templiteral can be used to manage native data, property and event bindings using familiar syntax without the need for an external compiler or compilicated build tools.
 
 ## Installation
 
@@ -14,7 +14,7 @@ yarn add templiteral
 
 ## How it Works
 
-The `templiteral` function takes two arguments (a location and a context) and returns a function that serves as an ECMAScript 2015 [template literal tag](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals), a function that takes in a template literal and returns some other object. Repeated calls to this function will update the previously-inserted DOM nodes if a binding is present.
+The `templiteral` function takes two optional arguments (a location and a context) and returns a function that serves as an ECMAScript 2015 [template literal tag](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals), a function that takes in a template literal and returns some other object. Repeated calls to this function will update the previously-inserted DOM nodes if a binding is present.
 
 So a template literal tag would look like the following:
 
@@ -26,19 +26,25 @@ const message = 'world';
 myTag`Hello ${message}`; // Hello world
 ```
 
+If the arguments aren't present, both will default to the call site's `this` and the relevant `shadowRoot` if one is present.
+
 The templiteral function returns a tag function that serves as a renderer.
 
 ## Example
 
 ```javascript
+
+The following example uses ESNext features and ECMAScript modules which might not be supported by all browsers:
+
 import { templiteral } from 'templiteral';
 
 class MyEl extends HTMLElement {
+  #templiteral = templiteral;
+
   constructor() {
     super();
-
-    this._shadowRoot = this.attachShadow({ mode: 'open' });
-    this.name = 'templiteral';
+    this.attachShadow({ mode: 'open' });
+    this.username = 'templiteral';
   }
 
   connectedCallback() {
@@ -46,8 +52,8 @@ class MyEl extends HTMLElement {
   }
 
   render() {
-    templiteral(this._shadowRoot, this)`
-      <h1>Hello ${this.name}</h1>
+    this.#templiteral()`
+      <h1>Hello ${this.username}</h1>
       <p>You're alright.</p>
     `;
   }
@@ -58,9 +64,9 @@ customElements.define('my-el', MyEl);
 
 Now when an instance of `my-el` is inserted into the DOM, the `render` method will be called and insert the template into the element's shadow root.
 
-## Event and property bindings
+## Event bindings
 
-Templiteral provides Angular 2+-style event bindings using the `(<eventName>)="this.eventHandler(...args)"` syntax.
+Templiteral provides Angular-style event bindings using the `(<eventName>)="this.eventHandler(...args)"` syntax.
 
 ```html
 <button (click)="this.logClickEvent(event)">Log a message</button>
@@ -68,8 +74,10 @@ Templiteral provides Angular 2+-style event bindings using the `(<eventName>)="t
 
 This would call the component's `logClickEvent` with the event object as the argument. As you might expect, you can also pass object properties or other arguments in the function invocation as well.
 
-Similarly property bindings are using the bracket notation `[<propertyName>]="${this.someProp}"`.
+## Property bindings
+
+Similar to the event bindings above, property bindings use the bracket notation `[<propertyName>]="${this.someProp}"`.
 
 ```html
-<input type="text" id="name" name="name" [required]="${this.isRequired}">
+<input type="text" id="username" name="username" [required]="${this.isRequired}" [value]="${this.username}">
 ```
