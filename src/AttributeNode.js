@@ -48,12 +48,21 @@ export class AttributeNode {
       const bases = attribute.base.match(/---!{*.}!---/g) || [];
       const baseIndicies = bases.map(base => +base.replace('---!{', '').replace('}!---', ''));
       let attributeValue = attribute.base;
-      for (let i = 0; i < baseIndicies.length; i += 1) {
-        const value = values[baseIndicies[i]] || '';
-        attributeValue = attributeValue.replace(`---!{${baseIndicies[i]}}!---`, value);
+
+      if (baseIndicies.length === 1) {
+        attributeValue = attributeValue.replace(`---!{${baseIndicies[0]}}!---`, values[baseIndicies[0]]);
+      } else if (baseIndicies.length > 1) {
+        for (let i = 0; i < baseIndicies.length; i += 1) {
+          const value = values[baseIndicies[i]] || '';
+          attributeValue = attributeValue.replace(`---!{${baseIndicies[i]}}!---`, value);
+        }
       }
+      
       attribute.value = attributeValue;
       if (attribute.name.match(propPattern)) {
+        if (baseIndicies.length === 1) {
+          attributeValue = values[baseIndicies[0]];
+        }
         this.updateProperty(attribute, attributeValue);
       }
     });
