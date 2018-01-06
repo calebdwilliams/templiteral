@@ -12,7 +12,9 @@
     "reactive",
     "web component",
     "custom element",
-    "customElements"
+    "customElements",
+    "Angular",
+    "React"
   ],
   "version": "2.0.2",
   "description": "",
