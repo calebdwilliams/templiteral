@@ -9,10 +9,11 @@ export class AttributeNode {
     this.compiler = compiler;
     this.boundAttrs.forEach(attribute => {
       attribute.base = attribute.value;
-      this.indicies = attribute.base.match(valuePattern).map(index => +index.replace(startSeparator, '').replace(endSeparator, ''));
+      const bases = attribute.base.match(valuePattern) || [];
+      this.indicies = bases.map(index => +index.replace(startSeparator, '').replace(endSeparator, ''));
       this.indicies.forEach(index => this.compiler.partIndicies.set(index, this));
     });
-    
+
     this.addListeners();
   }
 
@@ -37,7 +38,7 @@ export class AttributeNode {
     const attributeName = attribute.name.replace(/\[|\]/g, '');
     this.node[attributeName] = attributeValue;
     if (attributeValue && attributeValue !== 'false') {
-      this.node.setAttribute(attributeName, attributeValue);        
+      this.node.setAttribute(attributeName, attributeValue);
     } else {
       this.node.removeAttribute(attributeName);
     }
@@ -57,7 +58,7 @@ export class AttributeNode {
           attributeValue = attributeValue.replace(`---!{${baseIndicies[i]}}!---`, value);
         }
       }
-      
+
       attribute.value = attributeValue;
       if (attribute.name.match(propPattern)) {
         if (baseIndicies.length === 1) {

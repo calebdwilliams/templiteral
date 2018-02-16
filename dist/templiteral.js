@@ -53,10 +53,11 @@ class AttributeNode {
     this.compiler = compiler;
     this.boundAttrs.forEach(attribute => {
       attribute.base = attribute.value;
-      this.indicies = attribute.base.match(valuePattern).map(index => +index.replace(startSeparator, '').replace(endSeparator, ''));
+      const bases = attribute.base.match(valuePattern) || [];
+      this.indicies = bases.map(index => +index.replace(startSeparator, '').replace(endSeparator, ''));
       this.indicies.forEach(index => this.compiler.partIndicies.set(index, this));
     });
-    
+
     this.addListeners();
   }
 
@@ -81,7 +82,7 @@ class AttributeNode {
     const attributeName = attribute.name.replace(/\[|\]/g, '');
     this.node[attributeName] = attributeValue;
     if (attributeValue && attributeValue !== 'false') {
-      this.node.setAttribute(attributeName, attributeValue);        
+      this.node.setAttribute(attributeName, attributeValue);
     } else {
       this.node.removeAttribute(attributeName);
     }
@@ -101,7 +102,7 @@ class AttributeNode {
           attributeValue = attributeValue.replace(`---!{${baseIndicies[i]}}!---`, value);
         }
       }
-      
+
       attribute.value = attributeValue;
       if (attribute.name.match(propPattern)) {
         if (baseIndicies.length === 1) {
@@ -113,13 +114,13 @@ class AttributeNode {
   }
 }
 
-class Template {
+class Fragment {
   constructor(strings, values, location, context) {
     this.strings = strings;
     this.values = values;
     this.oldValues = values.map((value, index) => `---!{${index}}!---`);
-    this.location = location;
     this.context = context;
+    this.location = location;
     this.parts = [];
     this.partIndicies = new Map();
     
@@ -127,7 +128,7 @@ class Template {
     this._init();
   }
 
-  _append(node) {
+  _setParts() {
     for (let i = 0; i < this.parts.length; i += 1) {
       const part = this.parts[i];
       if (part instanceof ContentNode) {
@@ -137,7 +138,7 @@ class Template {
       }
     }
 
-    this.location.appendChild(node);
+    // this.location.appendChild(node);
   }
 
   _init() {
@@ -150,7 +151,7 @@ class Template {
 
     const walker = document.createTreeWalker(baseNode, 133, null, false);
     this._walk(walker, this.parts, true);
-    this._append(baseNode);
+    this._setParts(baseNode);
   }
 
   _walk(walker, parts, setup) {
@@ -204,6 +205,17 @@ class Template {
         this.partIndicies.get(i).update(values);
       }
     }
+  }
+}
+
+class Template extends Fragment {
+  constructor(strings, values, location, context) {
+    super(strings, values, location, context);
+  }
+
+  _setParts(node) {
+    super._setParts();
+    this.location.appendChild(node);
   }
 }
 
