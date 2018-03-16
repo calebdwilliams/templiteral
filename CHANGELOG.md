@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.1.2"></a>
+## [2.1.2](https://github.com/calebdwilliams/templiteral/compare/v2.1.1...v2.1.2) (2018-03-16)
+
+
+### Bug Fixes
+
+* **Template:** Added propPattern ([0d9db76](https://github.com/calebdwilliams/templiteral/commit/0d9db76))
+
+
+
 <a name="2.1.1"></a>
 ## [2.1.1](https://github.com/calebdwilliams/templiteral/compare/v2.1.0...v2.1.1) (2018-03-16)
 
