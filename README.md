@@ -88,7 +88,7 @@ Similar to the event bindings above, property bindings use the bracket notation 
 Need to use the same template on multiple items? You can use the `<t-repeat>` element to loop over data:
 
 ```html
-<t-repeat [items]="${this.todos}" [templateCallback]="${this.todoTemplateCallback}"></t-repat>
+<t-repeat [items]="${this.todos}" [templateCallback]="${this.todoTemplateCallback}"></t-repeat>
 ```
 
 In your base component, add a template callback as a method: 
