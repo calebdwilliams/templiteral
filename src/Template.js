@@ -1,6 +1,6 @@
 import { ContentNode } from './ContentNode';
 import { AttributeNode } from './AttributeNode';
-import { valuePattern, eventPattern } from './patterns';
+import { valuePattern, eventPattern, propPattern } from './patterns';
 
 export class Template {
   constructor(strings, values, location, context) {
