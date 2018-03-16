@@ -2,6 +2,8 @@
 
 Templiteral is a light-weight tool to reactively generate and update markup in-browser without the need for any framework or dependencies. Designed to work with the `customElements` spec, Templiteral can be used to manage native data, property and event bindings using familiar syntax without the need for an external compiler or complicated build tools.
 
+[Try templiteral for yourself on CodePen](https://codepen.io/calebdwilliams/pen/mXBryE).
+
 ## Installation
 
 Install with npm or yarn.
@@ -80,4 +82,37 @@ Similar to the event bindings above, property bindings use the bracket notation 
 
 ```html
 <input type="text" id="username" name="username" [required]="${this.isRequired}" [value]="${this.username}">
+```
+## Repeat directive
+
+Need to use the same template on multiple items? You can use the `<t-repeat>` element to loop over data:
+
+```html
+<t-repeat [items]="${this.todos}" [templateCallback]="${this.todoTemplateCallback}"></t-repat>
+```
+
+In your base component, add a template callback as a method: 
+
+```javascript
+todoTemplateCallback() {
+  return (todo, index) => `
+    <li>
+      <label>
+        <input type="checkbox" [checked]="${todo.complete}">
+        <span>${todo.title}</span>
+      </label>
+    </li>`;
+}
+```
+
+Any time the template's `_render` method is called, the element will update.
+
+## If directive
+
+To show/hide elements based on some condition, use the `<t-if>` element:
+
+```html
+<t-if [condition]="${this.showTodos}">
+  <!-- To do repeater -->
+</t-if>
 ```
