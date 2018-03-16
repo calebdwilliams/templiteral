@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.1.0"></a>
+# [2.1.0](https://github.com/calebdwilliams/templiteral/compare/v2.0.4...v2.1.0) (2018-03-16)
+
+
+### Features
+
+* **Fragment:** Added Fragment class for directives ([1dd85e1](https://github.com/calebdwilliams/templiteral/commit/1dd85e1))
+* **repeat and if:** Added t-repeat and t-if ([c1ee443](https://github.com/calebdwilliams/templiteral/commit/c1ee443))
+
+
+
 <a name="2.0.4"></a>
 ## [2.0.4](https://github.com/calebdwilliams/templiteral/compare/v2.0.3...v2.0.4) (2018-01-11)
 
