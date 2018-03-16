@@ -125,7 +125,7 @@ class Fragment {
     this._init();
   }
 
-  _setParts() {
+  _setParts(node) {
     for (let i = 0; i < this.parts.length; i += 1) {
       const part = this.parts[i];
       if (part instanceof ContentNode) {
@@ -134,8 +134,7 @@ class Fragment {
         part.update(this.values, this.oldValues);
       }
     }
-
-    // this.location.appendChild(node);
+    this.node = node;
   }
 
   _init() {
@@ -204,10 +203,6 @@ class Fragment {
     }
   }
 }
-
-// import { ContentNode } from './ContentNode.js';
-// import { AttributeNode } from './AttributeNode.js';
-// import { valuePattern, eventPattern, propPattern } from './patterns.js';
 
 class Template extends Fragment {
   constructor(strings, values, location, context) {

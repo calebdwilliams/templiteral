@@ -16,7 +16,7 @@ export class Fragment {
     this._init();
   }
 
-  _setParts() {
+  _setParts(node) {
     for (let i = 0; i < this.parts.length; i += 1) {
       const part = this.parts[i];
       if (part instanceof ContentNode) {
@@ -25,14 +25,24 @@ export class Fragment {
         part.update(this.values, this.oldValues);
       }
     }
-
-    // this.location.appendChild(node);
+    this.node = node;
   }
 
   _init() {
-    const base = this.strings.map((string, index) =>
-      `${string ? string : ''}${this.values[index] !== undefined ? '---!{' + index + '}!---' : ''}`
-    ).join('');
+    // const base = this.strings.map((string, index) =>
+    //   `${string ? string : ''}${this.values[index] !== undefined ? '---!{' + index + '}!---' : ''}`
+    // ).join('');
+    const base = this.strings.map((string, index) => {
+      let output = '';
+      const value = this.values[index];
+      string ? output += string : '';
+      if (value !== undefined && value.symbol !== 'abc') {
+        output += `---!{${index}}!---`;
+      } else if (value && value.symbol === 'abc') {
+        output += `---!{Directive${index}}!---`;
+      }
+      return output;
+    }).join('');
     const fragment = document.createElement('template');
     fragment.innerHTML = base;
     const baseNode = document.importNode(fragment.content, true);
@@ -74,6 +84,7 @@ export class Fragment {
           if (currentNode.textContent && currentNode.textContent.match(valuePattern)) {
             const contentNode = new ContentNode(currentNode, this);
             parts.push(contentNode);
+            // if directive, replace the node
           }
           break;
         }

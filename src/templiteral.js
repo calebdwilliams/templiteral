@@ -1,4 +1,6 @@
 import { Template } from './Template.js';
+import './TRepeat';
+import './TIf';
 
 const templateCache = new WeakMap();
 
@@ -14,7 +16,7 @@ export function templiteral(location = this, context = this) {
       compiler = new Template(strings, values, location, context);
       templateCache.set(location, compiler);
     }
-
+    
     return compiler;
   };
 }

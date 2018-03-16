@@ -9,11 +9,11 @@ export class AttributeNode {
     this.compiler = compiler;
     this.boundAttrs.forEach(attribute => {
       attribute.base = attribute.value;
-      const bases = attribute.base.match(valuePattern) || [];
-      this.indicies = bases.map(index => +index.replace(startSeparator, '').replace(endSeparator, ''));
+      const indicies = attribute.base.match(valuePattern) || [];
+      this.indicies = indicies.map(index => +index.replace(startSeparator, '').replace(endSeparator, ''));
       this.indicies.forEach(index => this.compiler.partIndicies.set(index, this));
     });
-
+    
     this.addListeners();
   }
 
@@ -23,7 +23,7 @@ export class AttributeNode {
       const eventsSafe = events.filter(event => event.match(sanitizePattern));
       const sanitizedEvents = eventsSafe.join('; ');
       if (eventHandler.match(sanitizePattern)) {
-        const handler = new Function(sanitizedEvents).bind(this.context);
+        const handler = Reflect.construct(Function, ['event', sanitizedEvents]).bind(this.context);
         this.node.addEventListener(eventName, handler);
         this.node._boundEvents = handler;
       }
@@ -37,9 +37,10 @@ export class AttributeNode {
   updateProperty(attribute, attributeValue) {
     const attributeName = attribute.name.replace(/\[|\]/g, '');
     this.node[attributeName] = attributeValue;
-    if (attributeValue && attributeValue !== 'false') {
+    if (attributeValue && (attributeValue !== 'false' && attributeValue !== 'undefined')) {
       this.node.setAttribute(attributeName, attributeValue);
     } else {
+      this.node[attributeName] = false;
       this.node.removeAttribute(attributeName);
     }
   }
@@ -58,7 +59,7 @@ export class AttributeNode {
           attributeValue = attributeValue.replace(`---!{${baseIndicies[i]}}!---`, value);
         }
       }
-
+      
       attribute.value = attributeValue;
       if (attribute.name.match(propPattern)) {
         if (baseIndicies.length === 1) {

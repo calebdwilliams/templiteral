@@ -4,7 +4,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 const valuePattern = /---!{.*?(}!---)/gi;
 const eventPattern = /^\(.*\)$/gi;
-const propPattern = /^\[.*\]$/;
+const propPattern$1 = /^\[.*\]$/;
 const sanitizePattern = /^this\./;
 const startSeparator = /---!\{/gi;
 const endSeparator = /\}!---/gi;
@@ -54,11 +54,11 @@ class AttributeNode {
     this.compiler = compiler;
     this.boundAttrs.forEach(attribute => {
       attribute.base = attribute.value;
-      const bases = attribute.base.match(valuePattern) || [];
-      this.indicies = bases.map(index => +index.replace(startSeparator, '').replace(endSeparator, ''));
+      const indicies = attribute.base.match(valuePattern) || [];
+      this.indicies = indicies.map(index => +index.replace(startSeparator, '').replace(endSeparator, ''));
       this.indicies.forEach(index => this.compiler.partIndicies.set(index, this));
     });
-
+    
     this.addListeners();
   }
 
@@ -68,7 +68,7 @@ class AttributeNode {
       const eventsSafe = events.filter(event => event.match(sanitizePattern));
       const sanitizedEvents = eventsSafe.join('; ');
       if (eventHandler.match(sanitizePattern)) {
-        const handler = new Function(sanitizedEvents).bind(this.context);
+        const handler = Reflect.construct(Function, ['event', sanitizedEvents]).bind(this.context);
         this.node.addEventListener(eventName, handler);
         this.node._boundEvents = handler;
       }
@@ -82,9 +82,10 @@ class AttributeNode {
   updateProperty(attribute, attributeValue) {
     const attributeName = attribute.name.replace(/\[|\]/g, '');
     this.node[attributeName] = attributeValue;
-    if (attributeValue && attributeValue !== 'false') {
+    if (attributeValue && (attributeValue !== 'false' && attributeValue !== 'undefined')) {
       this.node.setAttribute(attributeName, attributeValue);
     } else {
+      this.node[attributeName] = false;
       this.node.removeAttribute(attributeName);
     }
   }
@@ -103,9 +104,9 @@ class AttributeNode {
           attributeValue = attributeValue.replace(`---!{${baseIndicies[i]}}!---`, value);
         }
       }
-
+      
       attribute.value = attributeValue;
-      if (attribute.name.match(propPattern)) {
+      if (attribute.name.match(propPattern$1)) {
         if (baseIndicies.length === 1) {
           attributeValue = values[baseIndicies[0]];
         }
@@ -115,13 +116,13 @@ class AttributeNode {
   }
 }
 
-class Fragment {
+class Template {
   constructor(strings, values, location, context) {
     this.strings = strings;
     this.values = values;
     this.oldValues = values.map((value, index) => `---!{${index}}!---`);
-    this.context = context;
     this.location = location;
+    this.context = context;
     this.parts = [];
     this.partIndicies = new Map();
     
@@ -129,7 +130,7 @@ class Fragment {
     this._init();
   }
 
-  _setParts() {
+  _append(node) {
     for (let i = 0; i < this.parts.length; i += 1) {
       const part = this.parts[i];
       if (part instanceof ContentNode) {
@@ -139,7 +140,7 @@ class Fragment {
       }
     }
 
-    // this.location.appendChild(node);
+    this.location.appendChild(node);
   }
 
   _init() {
@@ -152,7 +153,7 @@ class Fragment {
 
     const walker = document.createTreeWalker(baseNode, 133, null, false);
     this._walk(walker, this.parts, true);
-    this._setParts(baseNode);
+    this._append(baseNode);
   }
 
   _walk(walker, parts, setup) {
@@ -209,15 +210,51 @@ class Fragment {
   }
 }
 
-class Template extends Fragment {
-  constructor(strings, values, location, context) {
-    super(strings, values, location, context);
+class TRepeat extends HTMLElement {
+  constructor() {
+    super();
+    this.templiteral = templiteral;
   }
 
-  _setParts(node) {
-    super._setParts();
-    this.location.appendChild(node);
+  connectedCallback() {
+    this._render();
   }
+
+  _render() {
+    this.templiteral()(this.items.map(this.templatecallback()));
+  }
+}
+
+if (!customElements.get('t-repeat')) {
+  customElements.define('t-repeat', TRepeat);
+}
+
+class TIf extends HTMLElement {  
+  constructor() {
+    super();
+    this.cached = [];
+  }
+    
+  connectedCallback() {
+    this.style.display = 'contents';  
+  }
+    
+  set condition(condition) {
+    if (condition === false) {
+      Array.from(this.children).map(child => {
+        this.cached.push(child);
+        this.removeChild(child);
+      });
+      this.innerHTML = '';
+    } else if (condition === true) {
+      this.cached.forEach(child => this.appendChild(child));
+      this.cached = [];
+    }
+  }
+}
+  
+if (!customElements.get('t-if')) {
+  customElements.define('t-if', TIf);
 }
 
 const templateCache = new WeakMap();
@@ -234,7 +271,7 @@ function templiteral(location = this, context = this) {
       compiler = new Template(strings, values, location, context);
       templateCache.set(location, compiler);
     }
-
+    
     return compiler;
   };
 }
