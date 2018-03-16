@@ -6,7 +6,7 @@
 
 const valuePattern = /---!{.*?(}!---)/gi;
 const eventPattern = /^\(.*\)$/gi;
-const propPattern$1 = /^\[.*\]$/;
+const propPattern = /^\[.*\]$/;
 const sanitizePattern = /^this\./;
 const startSeparator = /---!\{/gi;
 const endSeparator = /\}!---/gi;
@@ -108,7 +108,7 @@ class AttributeNode {
       }
       
       attribute.value = attributeValue;
-      if (attribute.name.match(propPattern$1)) {
+      if (attribute.name.match(propPattern)) {
         if (baseIndicies.length === 1) {
           attributeValue = values[baseIndicies[0]];
         }
