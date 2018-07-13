@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.2.0"></a>
+# [2.2.0](https://github.com/calebdwilliams/templiteral/compare/v2.1.3...v2.2.0) (2018-07-13)
+
+
+### Features
+
+* **model:** Added initial support for model ([c3d75be](https://github.com/calebdwilliams/templiteral/commit/c3d75be))
+
+
+
 <a name="2.1.3"></a>
 ## [2.1.3](https://github.com/calebdwilliams/templiteral/compare/v2.1.2...v2.1.3) (2018-03-16)
 
