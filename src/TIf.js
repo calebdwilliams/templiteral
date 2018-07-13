@@ -3,7 +3,7 @@ export class TIf extends HTMLElement {
     super();
     this.cached = [];
   }
-    
+  
   connectedCallback() {
     this.style.display = 'contents';  
   }

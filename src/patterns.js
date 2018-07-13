@@ -4,3 +4,6 @@ export const propPattern = /^\[.*\]$/;
 export const sanitizePattern = /^this\./;
 export const startSeparator = /---!\{/gi;
 export const endSeparator = /\}!---/gi;
+export const modelPattern = /t-model/gi;
+export const modelNamesPattern = /t-model=?".*?"/gi;
+export const modelSymbol = Symbol('t-model');

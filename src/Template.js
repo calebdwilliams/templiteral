@@ -1,6 +1,6 @@
 import { ContentNode } from './ContentNode';
 import { AttributeNode } from './AttributeNode';
-import { valuePattern, eventPattern, propPattern } from './patterns';
+import { valuePattern, eventPattern, propPattern, modelPattern, modelSymbol } from './patterns';
 
 export class Template {
   constructor(strings, values, location, context) {
@@ -42,7 +42,7 @@ export class Template {
     this._append(baseNode);
   }
 
-  _walk(walker, parts, setup) {
+  _walk(walker, parts) {
     while (walker.nextNode()) {
       const { currentNode } = walker;
       if (!currentNode.__templiteralCompiler) {
@@ -57,10 +57,13 @@ export class Template {
               if (attribute.value.match(valuePattern) || attribute.name.match(propPattern)) {
                 boundAttrs.set(attribute.name, attribute);
               }
-              if (setup && attribute.name.match(eventPattern)) {
+              if (attribute.name.match(eventPattern)) {
                 const eventName = attribute.name.substring(1, attribute.name.length - 1);
                 boundEvents.set(eventName, attribute.value);
                 this.eventHandlers.push({ eventName, currentNode });
+              }
+              if (attribute.name.match(modelPattern)) {
+                boundEvents.set(modelSymbol, attribute.value);
               }
             }
             if (boundAttrs.size >= 1 || boundEvents.size >= 1) {
@@ -90,7 +93,7 @@ export class Template {
 
     for (let i = 0; i < values.length; i += 1) {
       if (values[i] !== this.oldValues[i]) {
-        this.partIndicies.get(i).update(values);
+        this.partIndicies.get(i).update(values);        
       }
     }
   }

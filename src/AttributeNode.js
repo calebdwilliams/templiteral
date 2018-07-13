@@ -1,4 +1,4 @@
-import { propPattern, sanitizePattern, startSeparator, endSeparator, valuePattern } from './patterns.js';
+import { propPattern, sanitizePattern, startSeparator, endSeparator, valuePattern, modelSymbol } from './patterns.js';
 
 export class AttributeNode {
   constructor(node, boundAttrs, boundEvents, context, compiler) {
@@ -19,17 +19,24 @@ export class AttributeNode {
 
   addListeners() {
     this.boundEvents.forEach((eventHandler, eventName) => {
-      const events = eventHandler.split(/;/);
-      const eventsSafe = events.filter(event => event.match(sanitizePattern));
-      const sanitizedEvents = eventsSafe.join('; ');
-      if (eventHandler.match(sanitizePattern)) {
-        const handler = Reflect.construct(Function, ['event', sanitizedEvents]).bind(this.context);
-        this.node.addEventListener(eventName, handler);
-        this.node._boundEvents = handler;
-      }
+      if (eventName === modelSymbol) {
+        this.context[eventHandler] = this.context[eventHandler] ? this.context[eventHandler] : undefined;
+        this.node.value = this.context[eventHandler];
+        this.node.addEventListener('input', this._modelFunction(eventHandler));
+        this.node.addEventListener('change', this._modelFunction(eventHandler));        
+      } else {
+        const events = eventHandler.split(/;/);
+        const eventsSafe = events.filter(event => event.match(sanitizePattern));
+        const sanitizedEvents = eventsSafe.join('; ');
+        if (eventHandler.match(sanitizePattern)) {
+          const handler = Reflect.construct(Function, ['event', sanitizedEvents]).bind(this.context);
+          this.node.addEventListener(eventName, handler);
+          this.node._boundEvents = handler;
+        }
 
-      if (eventsSafe.length < events.length) {
-        console.warn('Inline functions not allowed inside of event bindings. Unsafe functions have been removed from node', this.node);
+        if (eventsSafe.length < events.length) {
+          console.warn('Inline functions not allowed inside of event bindings. Unsafe functions have been removed from node', this.node);
+        }
       }
     });
   }
@@ -68,5 +75,12 @@ export class AttributeNode {
         this.updateProperty(attribute, attributeValue);
       }
     });
+  }
+
+  _modelFunction(modelName) {
+    const { context } = this;
+    return function() {
+      context[modelName] = this.value;
+    };
   }
 }

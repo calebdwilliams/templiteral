@@ -8,6 +8,9 @@ const propPattern = /^\[.*\]$/;
 const sanitizePattern = /^this\./;
 const startSeparator = /---!\{/gi;
 const endSeparator = /\}!---/gi;
+const modelPattern = /t-model/gi;
+
+const modelSymbol = Symbol('t-model');
 
 class ContentNode {
   constructor(node, compiler) {
@@ -64,17 +67,24 @@ class AttributeNode {
 
   addListeners() {
     this.boundEvents.forEach((eventHandler, eventName) => {
-      const events = eventHandler.split(/;/);
-      const eventsSafe = events.filter(event => event.match(sanitizePattern));
-      const sanitizedEvents = eventsSafe.join('; ');
-      if (eventHandler.match(sanitizePattern)) {
-        const handler = Reflect.construct(Function, ['event', sanitizedEvents]).bind(this.context);
-        this.node.addEventListener(eventName, handler);
-        this.node._boundEvents = handler;
-      }
+      if (eventName === modelSymbol) {
+        this.context[eventHandler] = this.context[eventHandler] ? this.context[eventHandler] : undefined;
+        this.node.value = this.context[eventHandler];
+        this.node.addEventListener('input', this._modelFunction(eventHandler));
+        this.node.addEventListener('change', this._modelFunction(eventHandler));        
+      } else {
+        const events = eventHandler.split(/;/);
+        const eventsSafe = events.filter(event => event.match(sanitizePattern));
+        const sanitizedEvents = eventsSafe.join('; ');
+        if (eventHandler.match(sanitizePattern)) {
+          const handler = Reflect.construct(Function, ['event', sanitizedEvents]).bind(this.context);
+          this.node.addEventListener(eventName, handler);
+          this.node._boundEvents = handler;
+        }
 
-      if (eventsSafe.length < events.length) {
-        console.warn('Inline functions not allowed inside of event bindings. Unsafe functions have been removed from node', this.node);
+        if (eventsSafe.length < events.length) {
+          console.warn('Inline functions not allowed inside of event bindings. Unsafe functions have been removed from node', this.node);
+        }
       }
     });
   }
@@ -113,6 +123,13 @@ class AttributeNode {
         this.updateProperty(attribute, attributeValue);
       }
     });
+  }
+
+  _modelFunction(modelName) {
+    const { context } = this;
+    return function() {
+      context[modelName] = this.value;
+    };
   }
 }
 
@@ -156,7 +173,7 @@ class Template {
     this._append(baseNode);
   }
 
-  _walk(walker, parts, setup) {
+  _walk(walker, parts) {
     while (walker.nextNode()) {
       const { currentNode } = walker;
       if (!currentNode.__templiteralCompiler) {
@@ -171,10 +188,13 @@ class Template {
               if (attribute.value.match(valuePattern) || attribute.name.match(propPattern)) {
                 boundAttrs.set(attribute.name, attribute);
               }
-              if (setup && attribute.name.match(eventPattern)) {
+              if (attribute.name.match(eventPattern)) {
                 const eventName = attribute.name.substring(1, attribute.name.length - 1);
                 boundEvents.set(eventName, attribute.value);
                 this.eventHandlers.push({ eventName, currentNode });
+              }
+              if (attribute.name.match(modelPattern)) {
+                boundEvents.set(modelSymbol, attribute.value);
               }
             }
             if (boundAttrs.size >= 1 || boundEvents.size >= 1) {
@@ -204,7 +224,7 @@ class Template {
 
     for (let i = 0; i < values.length; i += 1) {
       if (values[i] !== this.oldValues[i]) {
-        this.partIndicies.get(i).update(values);
+        this.partIndicies.get(i).update(values);        
       }
     }
   }
@@ -234,7 +254,7 @@ class TIf extends HTMLElement {
     super();
     this.cached = [];
   }
-    
+  
   connectedCallback() {
     this.style.display = 'contents';  
   }

@@ -1,3 +1,4 @@
+/* eslint-env node */
 const express     = require('express');
 const rollup      = require('express-middleware-rollup');
 const bodyParser  = require('body-parser');

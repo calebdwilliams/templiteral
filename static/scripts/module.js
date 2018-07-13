@@ -18,6 +18,7 @@ class MyEl extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.pContentEditable = false;
     this.templiteral = templiteral;
+    this.hello = 'abc';
   }
 
   connectedCallback() {
@@ -60,12 +61,6 @@ class MyEl extends HTMLElement {
 
   update(event) {
     event.preventDefault();
-    const inputs = this.shadowRoot.querySelector('form').querySelectorAll('[username]');
-
-    inputs.forEach(input => {
-      // console.log(input.name, input.value);
-    });
-
     this.username = this.shadowRoot.querySelector('input').value;
   }
 
@@ -107,18 +102,44 @@ class MyEl extends HTMLElement {
 
       <p>Quisque sit amet lorem in mauris viverra facilisis. Vestibulum pharetra elit eget eleifend tempor.</p>
 
+      <bind-to [info]="${this.username}"></bind-to>
+
+      <h3>${this.hello}</h3>
+
       <form (submit)="this.update(event)">
         <label for="username">User name</label>
-        <input id="username" type="text" name="username" (input)="this.updateName()" [value]="${this.username}">
+        <input id="username" type="text" name="username" (input)="this.updateName()" t-model="hello">
 
         <button>Submit</button>
       </form>
 
       <button (click)="this.toggleName(event)">${this.buttonMessage}</button>
       <button (click)="this.toggleContentEditable()">Toggle content editable</button>
-
     `;
   }
 }
 
 customElements.define(MyEl.tagName, MyEl);
+
+class BindTo extends HTMLElement {
+  constructor() {
+    super();
+    this.templiteral = templiteral;
+  }
+
+  connectedCallback() {
+    this._render();
+  }
+
+  set info(_info) {
+    console.log(_info);
+    _info ? this.setAttribute('info', _info) : this.removeAttribute('info');
+    this._render();
+  }
+
+  _render() {
+    this.templiteral()`<h2>Info: ${this.info}</h2>`;
+  }
+}
+
+customElements.define('bind-to', BindTo);
