@@ -95,9 +95,13 @@ export class Template {
 
     for (let i = 0; i < values.length; i += 1) {
       if (values[i] !== this.oldValues[i]) {
-        window.requestAnimationFrame(() => 
+        window.requestAnimationFrame(() => {
+          try {
           this.partIndicies.get(i).update(values)
-        );
+          } catch(e) {
+            console.log(this.partIndicies.get(i), i, values[i])
+          }
+        });
       }
     }
   }

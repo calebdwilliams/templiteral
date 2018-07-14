@@ -78,9 +78,8 @@ class AttributeNode {
           console.error(`Method ${handlerName} is not a method of element ${this.context.tagName}`);
         } else {
           const handler = this.context[handlerName].bind(this.context);
-          this.node.addEventListener(eventName, this.context[handlerName].bind(this.context));
+          this.node.addEventListener(eventName, handler);
           this.node._boundEvents = handler;
-          
         }
       }
     });
@@ -223,9 +222,13 @@ class Template {
 
     for (let i = 0; i < values.length; i += 1) {
       if (values[i] !== this.oldValues[i]) {
-        window.requestAnimationFrame(() => 
-          this.partIndicies.get(i).update(values)
-        );
+        window.requestAnimationFrame(() => {
+          try {
+          this.partIndicies.get(i).update(values);
+          } catch(e) {
+            console.log(this.partIndicies.get(i), i, values[i]);
+          }
+        });
       }
     }
   }
@@ -330,7 +333,7 @@ class Component extends HTMLElement {
     Object.defineProperty(this, 'templiteral', {
       get() {
         const location = self.shadowRoot ? self.shadowRoot : self;
-        return templiteral(self, location);
+        return templiteral(location, self);
       },
       enumerable: false,
       configurable: false
@@ -341,7 +344,7 @@ class Component extends HTMLElement {
       get() {
         return (...args) => {
           window.requestAnimationFrame(() => Reflect.apply(self.templiteral, self, args));
-        }
+        };
       }
     });
   }

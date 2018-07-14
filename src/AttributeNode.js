@@ -30,9 +30,8 @@ export class AttributeNode {
           console.error(`Method ${handlerName} is not a method of element ${this.context.tagName}`);
         } else {
           const handler = this.context[handlerName].bind(this.context);
-          this.node.addEventListener(eventName, this.context[handlerName].bind(this.context));
+          this.node.addEventListener(eventName, handler);
           this.node._boundEvents = handler;
-          
         }
       }
     });

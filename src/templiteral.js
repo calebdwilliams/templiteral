@@ -54,7 +54,7 @@ export class Component extends HTMLElement {
     Object.defineProperty(this, 'templiteral', {
       get() {
         const location = self.shadowRoot ? self.shadowRoot : self;
-        return templiteral(self, location);
+        return templiteral(location, self);
       },
       enumerable: false,
       configurable: false
@@ -65,7 +65,7 @@ export class Component extends HTMLElement {
       get() {
         return (...args) => {
           window.requestAnimationFrame(() => Reflect.apply(self.templiteral, self, args));
-        }
+        };
       }
     });
   }

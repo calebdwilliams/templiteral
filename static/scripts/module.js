@@ -1,54 +1,28 @@
-import { templiteral } from '../templiteral.js';
+import { Component } from '../templiteral.js';
 import { BindTo } from './Component.test.js';
 
-class MyEl extends HTMLElement {
+class MyEl extends Component {
   static get tagName() { return 'my-el'; }
-  static get boundAttributes() { return ['username', 'abc']; }
-  static get observedAttributes() {
-    return ['test', ...this.boundAttributes];
+  static get boundAttributes() {
+    return ['test', 'abc', 'username', 'pContentEditable'];
   }
-
-  attributeChangedCallback(name) {
-    if (this.constructor.boundAttributes.includes(name)) {
-      this.render();
-    }
-  }
+  static get renderer() { return 'render'; }
 
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
     this.pContentEditable = false;
-    this.templiteral = templiteral;
     this.hello = 'abc';
-  }
-
-  connectedCallback() {
     this.username = 'everyone';
     this.abc = 'no one';
-
-    this.render();
-  }
-
-  disconnectedCallback() {
-    this._shadowRoot.template.disconnect();
   }
 
   get buttonMessage() {
     return this.username === 'everyone' ? 'Set name to everyone' : 'Set name to world';
   }
 
-  get username() {
-    return this.getAttribute('username');
-  }
-
-  set username(_username) {
-    _username ? this.setAttribute('username', _username) : this.removeAttribute('username');
-  }
-
   toggleContentEditable() {
     this.pContentEditable = !this.pContentEditable;
-    console.log(this.pContentEditable)
-    this.render();
   }
 
   toggleName(event) {
@@ -70,7 +44,7 @@ class MyEl extends HTMLElement {
   }
 
   render() {
-    this._ = this.templiteral()`
+    this._ = this.html`
       <style>
         * {
           font-family: Optimist
@@ -105,11 +79,9 @@ class MyEl extends HTMLElement {
 
       <bind-to [info]="${this.username}"></bind-to>
 
-      <h3>${this.hello}</h3>
-
       <form (submit)="this.update(event)">
         <label for="username">User name</label>
-        <input id="username" type="text" name="username" (input)="this.updateName()" t-model="hello" ref="input">
+        <input id="username" type="text" name="username" (input)="this.updateName()" ref="input">
 
         <button>Submit</button>
       </form>
