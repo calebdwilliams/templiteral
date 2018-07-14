@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.4.1"></a>
+## [2.4.1](https://github.com/calebdwilliams/templiteral/compare/v2.4.0...v2.4.1) (2018-07-14)
+
+
+### Bug Fixes
+
+* **AttributeNode:** Simplified event bindings ([101bce7](https://github.com/calebdwilliams/templiteral/commit/101bce7))
+* **Component:** Fixed argument order on templiteral ([5d8b2ed](https://github.com/calebdwilliams/templiteral/commit/5d8b2ed))
+
+
+
 <a name="2.4.0"></a>
 # [2.4.0](https://github.com/calebdwilliams/templiteral/compare/v2.3.0...v2.4.0) (2018-07-14)
 
