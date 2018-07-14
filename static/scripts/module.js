@@ -1,4 +1,5 @@
 import { templiteral } from '../templiteral.js';
+import { BindTo } from './Component.test.js';
 
 class MyEl extends HTMLElement {
   static get tagName() { return 'my-el'; }
@@ -120,26 +121,3 @@ class MyEl extends HTMLElement {
 }
 
 customElements.define(MyEl.tagName, MyEl);
-
-class BindTo extends HTMLElement {
-  constructor() {
-    super();
-    this.templiteral = templiteral;
-  }
-
-  connectedCallback() {
-    this._render();
-  }
-
-  set info(_info) {
-    console.log(_info);
-    _info ? this.setAttribute('info', _info) : this.removeAttribute('info');
-    this._render();
-  }
-
-  _render() {
-    this.templiteral()`<h2>Info: ${this.info}</h2>`;
-  }
-}
-
-customElements.define('bind-to', BindTo);

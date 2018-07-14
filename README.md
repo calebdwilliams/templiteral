@@ -83,6 +83,50 @@ Similar to the event bindings above, property bindings use the bracket notation 
 ```html
 <input type="text" id="username" name="username" [required]="${this.isRequired}" [value]="${this.username}">
 ```
+
+## Component base
+
+Templiteral exports a `Component` abstract class that provides a significant boilerplate for building custom elements. By utilizing the built-in static getter `boundAttributes` which returns an array of property names, you will keep your attribute and property vaules in sync.
+
+In addition, `Component` adds a static getter for a render method (`renderer`) which will be called when any bound attribute changes. Along with the renderer, a new element method, `html` serves as an alias for `this.templiteral()`:
+
+```javascript
+import { Component } from 'templiteral';
+
+class HelloWorld extends Component {
+  static get boundAttributes() {
+    return ['who', 'now'];
+  }
+
+  static get renderer() { return 'render'; }
+
+  constructor() {
+    super();
+    this.who = 'world';
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    setInterval(this.updateTime.bind(this), 100);
+  }
+
+  updateTime() {
+    this.now = new Date().toLocaleString();    
+  }
+
+  render() {
+    this.html`
+      <h1>Hello ${this.who}</h1>
+      <p>${this.now}</p>
+    `;
+  }
+}
+
+customElements.define('hello-world', HelloWorld);
+```
+
+The `<hello-world></hello-world>` element would now have attributes in sync with the data and would automatically re-render the time every 100 milliseconds.
+
 ## Element references
 
 Similar to React, you can create a simple element reference inside your template with the `ref` attribute: 

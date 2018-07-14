@@ -11,6 +11,7 @@ export class Template {
     this.context = context;
     this.parts = [];
     this.partIndicies = new Map();
+    this.context.$el = location;
     
     this.eventHandlers = [];
     this._init();

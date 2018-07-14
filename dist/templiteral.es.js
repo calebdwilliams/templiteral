@@ -138,6 +138,7 @@ class Template {
     this.context = context;
     this.parts = [];
     this.partIndicies = new Map();
+    this.context.$el = location;
     
     this.eventHandlers = [];
     this._init();
@@ -296,4 +297,70 @@ function templiteral(location = this, context = this) {
   };
 }
 
-export { templiteral };
+class Component extends HTMLElement {
+  static get boundAttributes() {
+    return [];
+  }
+  
+  static get observedAttributes() {
+    return [...this.boundAttributes];
+  }
+  
+  constructor() {
+    super();
+    const self = this;
+    this.constructor.boundAttributes.forEach(attr => {
+      Object.defineProperty(this, attr, {
+        get() {
+          return this.getAttribute(attr);
+        },
+        set(_attr) {
+          if (_attr) {
+            this.setAttribute(attr, _attr);
+          } else {
+            this.removeAttribute(attr);
+          }
+          if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function') {
+            this[this.constructor.renderer]();
+          }
+        }
+      });
+    });
+    
+    Object.defineProperty(this, 'templiteral', {
+      get() {
+        const location = self.shadowRoot ? self.shadowRoot : self;
+        return templiteral(self, location);
+      },
+      enumerable: false,
+      configurable: false
+    });
+    
+    Object.defineProperty(this, 'html', {
+      enumerable: false,
+      get() {
+        return (...args) => {
+          window.requestAnimationFrame(() => Reflect.apply(self.templiteral, self, args));
+        }
+      }
+    });
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue !== newValue) {
+      this[name] = newValue;
+    }
+  }
+  
+  connectedCallback() {
+    if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function') {
+      this[this.constructor.renderer]();
+    }
+  }
+  
+  disconnectedCallback() {
+    templateCache.delete(this);
+  }
+}
+
+export { templiteral, Component };
