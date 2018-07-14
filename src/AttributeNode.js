@@ -25,17 +25,14 @@ export class AttributeNode {
         this.node.addEventListener('input', this._modelFunction(eventHandler));
         this.node.addEventListener('change', this._modelFunction(eventHandler));        
       } else {
-        const events = eventHandler.split(/;/);
-        const eventsSafe = events.filter(event => event.match(sanitizePattern));
-        const sanitizedEvents = eventsSafe.join('; ');
-        if (eventHandler.match(sanitizePattern)) {
-          const handler = Reflect.construct(Function, ['event', sanitizedEvents]).bind(this.context);
-          this.node.addEventListener(eventName, handler);
+        const handlerName = eventHandler.replace(/(this\.)|(\(.*\))/gi, '');
+        if (typeof this.context[handlerName] !== 'function') {
+          console.error(`Method ${handlerName} is not a method of element ${this.context.tagName}`);
+        } else {
+          const handler = this.context[handlerName].bind(this.context);
+          this.node.addEventListener(eventName, this.context[handlerName].bind(this.context));
           this.node._boundEvents = handler;
-        }
-
-        if (eventsSafe.length < events.length) {
-          console.warn('Inline functions not allowed inside of event bindings. Unsafe functions have been removed from node', this.node);
+          
         }
       }
     });

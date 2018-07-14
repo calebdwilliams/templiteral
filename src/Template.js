@@ -66,7 +66,6 @@ export class Template {
                 boundEvents.set(modelSymbol, attribute.value);
               } else if (attribute.name.match('ref')) {
                 this.context.refs[attribute.value] = currentNode;
-                console.dir(this.context)
               }
             }
             if (boundAttrs.size >= 1 || boundEvents.size >= 1) {
