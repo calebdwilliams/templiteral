@@ -16,7 +16,7 @@
     "Angular",
     "React"
   ],
-  "version": "2.4.1",
+  "version": "2.4.2",
   "description": "",
   "main": "dist/templiteral.js",
   "module": "dist/templiteral.es.js",
@@ -26,6 +26,7 @@
     "postbuild": "uglifyjs dist/templiteral.js -o dist/templiteral.min.js -m && uglifyjs dist/templiteral.cjs.js -o dist/templiteral.cjs.min.js -m && uglifyjs dist/templiteral.umd.js -o dist/templiteral.umd.min.js -m && uglifyjs dist/templiteral.es.js -o dist/templiteral.es.min.js",
     "clean": "rimraf dist",
     "release": "standard-version",
+    "postrelease": "git push --follow-tags origin master; npm publish",
     "start": "node server.js",
     "test": "karma start"
   },
