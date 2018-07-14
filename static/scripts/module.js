@@ -61,11 +61,11 @@ class MyEl extends HTMLElement {
 
   update(event) {
     event.preventDefault();
-    this.username = this.shadowRoot.querySelector('input').value;
+    this.username = this.refs.input.value;
   }
 
   updateName() {
-    this.username = this.shadowRoot.querySelector('input').value;
+    this.username = this.refs.input.value;
   }
 
   render() {
@@ -108,7 +108,7 @@ class MyEl extends HTMLElement {
 
       <form (submit)="this.update(event)">
         <label for="username">User name</label>
-        <input id="username" type="text" name="username" (input)="this.updateName()" t-model="hello">
+        <input id="username" type="text" name="username" (input)="this.updateName()" t-model="hello" ref="input">
 
         <button>Submit</button>
       </form>

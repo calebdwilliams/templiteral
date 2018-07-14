@@ -83,6 +83,20 @@ Similar to the event bindings above, property bindings use the bracket notation 
 ```html
 <input type="text" id="username" name="username" [required]="${this.isRequired}" [value]="${this.username}">
 ```
+## Element references
+
+Similar to React, you can create a simple element reference inside your template with the `ref` attribute: 
+
+```html
+<input type="text" id="username" ref="username">
+```
+
+and in your component file:
+
+```javascript
+this.username = this.refs.username.value;
+```
+
 ## Repeat directive
 
 Need to use the same template on multiple items? You can use the `<t-repeat>` element to loop over data:

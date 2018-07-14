@@ -174,6 +174,7 @@ class Template {
   }
 
   _walk(walker, parts) {
+    this.context.refs = this.context.refs || {};
     while (walker.nextNode()) {
       const { currentNode } = walker;
       if (!currentNode.__templiteralCompiler) {
@@ -187,14 +188,15 @@ class Template {
               const attribute = attributes[i];
               if (attribute.value.match(valuePattern) || attribute.name.match(propPattern)) {
                 boundAttrs.set(attribute.name, attribute);
-              }
-              if (attribute.name.match(eventPattern)) {
+              } else if (attribute.name.match(eventPattern)) {
                 const eventName = attribute.name.substring(1, attribute.name.length - 1);
                 boundEvents.set(eventName, attribute.value);
                 this.eventHandlers.push({ eventName, currentNode });
-              }
-              if (attribute.name.match(modelPattern)) {
+              } else if (attribute.name.match(modelPattern)) {
                 boundEvents.set(modelSymbol, attribute.value);
+              } else if (attribute.name.match('ref')) {
+                this.context.refs[attribute.value] = currentNode;
+                console.dir(this.context);
               }
             }
             if (boundAttrs.size >= 1 || boundEvents.size >= 1) {
@@ -224,7 +226,9 @@ class Template {
 
     for (let i = 0; i < values.length; i += 1) {
       if (values[i] !== this.oldValues[i]) {
-        this.partIndicies.get(i).update(values);        
+        window.requestAnimationFrame(() => 
+          this.partIndicies.get(i).update(values)
+        );
       }
     }
   }
