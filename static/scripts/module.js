@@ -4,7 +4,7 @@ import { BindTo } from './Component.test.js';
 class MyEl extends Component {
   static get tagName() { return 'my-el'; }
   static get boundAttributes() {
-    return ['test', 'abc', 'username', 'pContentEditable'];
+    return ['abc', 'username', 'pContentEditable'];
   }
   static get renderer() { return 'render'; }
 
@@ -15,10 +15,16 @@ class MyEl extends Component {
     this.hello = 'abc';
     this.username = 'everyone';
     this.abc = 'no one';
+    this.letters = ['a', 'b', 'c'];
   }
 
   get buttonMessage() {
     return this.username === 'everyone' ? 'Set name to everyone' : 'Set name to world';
+  }
+
+  addLetter() {
+    this.letters.push('d');
+    this.render();
   }
 
   toggleContentEditable() {
@@ -66,9 +72,18 @@ class MyEl extends Component {
         }
       </style>
       <h1 class="heading" role="header">Hello ${this.username}</h1>
+
       <div class="${this.username} arbitrary">
         <h2>Test</h2>
       </div>
+
+      <ul>
+        <li>letters</li>
+        ${this.letters.map(letter => `<li>${letter}</li>`)}
+      </ul>
+
+      <button (click)="this.addLetter()">Add letter</button>
+
       <p [contentEditable]="${this.pContentEditable}">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean sapien magna, aliquet non massa dapibus, convallis porta sem. Phasellus laoreet, turpis et feugiat malesuada, quam magna tincidunt diam, at tempor sapien nisl nec elit. Curabitur suscipit mi eu dolor tempor luctus eu vel tortor.</p>
       
       <p>${this.pContentEditable} — ${this.username}</p>

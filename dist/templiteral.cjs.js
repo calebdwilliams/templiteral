@@ -43,7 +43,11 @@ class ContentNode {
   update(values) {
     this.node.nodeValue = this.base.replace(/---!{*.}!---/g, match => {
       const value = values[+match.replace(startSeparator, '').replace(endSeparator, '')];
-      return value === null ? '' : value;
+      if (Array.isArray(value)) {
+        return value.join('');
+      } else {
+        return value === null ? '' : value;
+      }
     });
   }
 }
@@ -88,6 +92,11 @@ class AttributeNode {
   updateProperty(attribute, attributeValue) {
     const attributeName = attribute.name.replace(/\[|\]/g, '');
     this.node[attributeName] = attributeValue;
+    if (attributeName === 'innerhtml') {
+      this.node.innerHTML = attributeValue.join('');
+      this.node.removeAttribute('innerhtml');
+      this.node.removeAttribute('innerHTML');
+    }
     if (attributeValue && (attributeValue !== 'false' && attributeValue !== 'undefined')) {
       this.node.setAttribute(attributeName, attributeValue);
     } else {
@@ -161,8 +170,20 @@ class Template {
     const base = this.strings.map((string, index) =>
       `${string ? string : ''}${this.values[index] !== undefined ? '---!{' + index + '}!---' : ''}`
     ).join('');
+    const _base = this.strings.map((string, index) => {
+      const value = this.values[index];
+      const interpolationValue = `---!{${index}}!---`;
+      let output = '';
+      output += string ? string : '';
+      if (value !== undefined && !Array.isArray(value)) {
+        output += interpolationValue;
+      } else if (value !== undefined && Array.isArray(value)) {
+        output += `<div style="display: contents" [innerHTML]="${interpolationValue}"></div>`;
+      }
+      return output;
+    }).join('');
     const fragment = document.createElement('template');
-    fragment.innerHTML = base;
+    fragment.innerHTML = _base;
     const baseNode = document.importNode(fragment.content, true);
 
     const walker = document.createTreeWalker(baseNode, 133, null, false);
@@ -222,13 +243,9 @@ class Template {
 
     for (let i = 0; i < values.length; i += 1) {
       if (values[i] !== this.oldValues[i]) {
-        window.requestAnimationFrame(() => {
-          try {
-          this.partIndicies.get(i).update(values);
-          } catch(e) {
-            console.log(this.partIndicies.get(i), i, values[i]);
-          }
-        });
+        window.requestAnimationFrame(() => 
+          this.partIndicies.get(i).update(values)
+        );
       }
     }
   }
@@ -312,7 +329,8 @@ class Component extends HTMLElement {
   constructor() {
     super();
     const self = this;
-    this.constructor.boundAttributes.forEach(attr => {
+    const attrs = new Set();
+    this.constructor.boundAttributes.map((attr, index, currentArray) => {
       Object.defineProperty(this, attr, {
         get() {
           return this.getAttribute(attr);
@@ -323,11 +341,13 @@ class Component extends HTMLElement {
           } else {
             this.removeAttribute(attr);
           }
-          if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function') {
+          if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function' && this.isConnected && attrs.size === currentArray.length) {
             this[this.constructor.renderer]();
           }
+          attrs.add(attr);
         }
       });
+      
     });
     
     Object.defineProperty(this, 'templiteral', {
@@ -366,5 +386,28 @@ class Component extends HTMLElement {
   }
 }
 
+const watch = (object, onChange) => {
+  const handler = {
+    get(target, property, receiver) {
+      try {
+        return new Proxy(target[property], handler);
+      } catch (err) {
+        return Reflect.get(target, property, receiver);
+      }
+    },
+    defineProperty(target, property, descriptor) {
+      onChange();
+      return Reflect.defineProperty(target, property, descriptor);
+    },
+    deleteProperty(target, property) {
+      onChange();
+      return Reflect.deleteProperty(target, property);
+    }
+  };
+
+  return new Proxy(object, handler);
+};
+
 exports.templiteral = templiteral;
 exports.Component = Component;
+exports.watch = watch;

@@ -40,6 +40,11 @@ export class AttributeNode {
   updateProperty(attribute, attributeValue) {
     const attributeName = attribute.name.replace(/\[|\]/g, '');
     this.node[attributeName] = attributeValue;
+    if (attributeName === 'innerhtml') {
+      this.node.innerHTML = attributeValue.join('');
+      this.node.removeAttribute('innerhtml');
+      this.node.removeAttribute('innerHTML');
+    }
     if (attributeValue && (attributeValue !== 'false' && attributeValue !== 'undefined')) {
       this.node.setAttribute(attributeName, attributeValue);
     } else {

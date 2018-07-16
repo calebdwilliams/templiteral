@@ -31,7 +31,11 @@ export class ContentNode {
   update(values) {
     this.node.nodeValue = this.base.replace(/---!{*.}!---/g, match => {
       const value = values[+match.replace(startSeparator, '').replace(endSeparator, '')];
-      return value === null ? '' : value;
+      if (Array.isArray(value)) {
+        return value.join('');
+      } else {
+        return value === null ? '' : value;
+      }
     });
   }
 }

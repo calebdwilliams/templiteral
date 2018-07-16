@@ -33,7 +33,8 @@ export class Component extends HTMLElement {
   constructor() {
     super();
     const self = this;
-    this.constructor.boundAttributes.forEach(attr => {
+    const attrs = new Set();
+    this.constructor.boundAttributes.map((attr, index, currentArray) => {
       Object.defineProperty(this, attr, {
         get() {
           return this.getAttribute(attr);
@@ -44,11 +45,13 @@ export class Component extends HTMLElement {
           } else {
             this.removeAttribute(attr);
           }
-          if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function') {
+          if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function' && this.isConnected && attrs.size === currentArray.length) {
             this[this.constructor.renderer]();
           }
+          attrs.add(attr);
         }
       });
+      
     });
     
     Object.defineProperty(this, 'templiteral', {
@@ -86,3 +89,25 @@ export class Component extends HTMLElement {
     templateCache.delete(this);
   }
 }
+
+export const watch = (object, onChange) => {
+  const handler = {
+    get(target, property, receiver) {
+      try {
+        return new Proxy(target[property], handler);
+      } catch (err) {
+        return Reflect.get(target, property, receiver);
+      }
+    },
+    defineProperty(target, property, descriptor) {
+      onChange();
+      return Reflect.defineProperty(target, property, descriptor);
+    },
+    deleteProperty(target, property) {
+      onChange();
+      return Reflect.deleteProperty(target, property);
+    }
+  };
+
+  return new Proxy(object, handler);
+};
