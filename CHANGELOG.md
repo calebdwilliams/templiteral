@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.5.0"></a>
+# [2.5.0](https://github.com/calebdwilliams/templiteral/compare/v2.4.2...v2.5.0) (2018-07-16)
+
+
+### Features
+
+* **array:** Basic support for arrays ([9f66dd2](https://github.com/calebdwilliams/templiteral/commit/9f66dd2))
+
+
+
 <a name="2.4.2"></a>
 ## [2.4.2](https://github.com/calebdwilliams/templiteral/compare/v2.4.1...v2.4.2) (2018-07-14)
 
