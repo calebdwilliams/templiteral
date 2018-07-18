@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.6.0"></a>
+# [2.6.0](https://github.com/calebdwilliams/templiteral/compare/v2.5.0...v2.6.0) (2018-07-18)
+
+
+### Features
+
+* **Array methods, React-style functions:** Added Array methods using the fragment method, dynamic re-rendering of nested components and React-style function bindings ([a93192f](https://github.com/calebdwilliams/templiteral/commit/a93192f))
+
+
+
 <a name="2.5.0"></a>
 # [2.5.0](https://github.com/calebdwilliams/templiteral/compare/v2.4.2...v2.5.0) (2018-07-16)
 
