@@ -10,8 +10,12 @@ export function templiteral(location = this, context = this) {
   return (strings, ...values) => {
     let compiler = templateCache.get(location);
 
-    if (compiler) {
+    if (compiler && strings === compiler.strings) {
       compiler.update(values);
+    } else if (compiler) {
+      [...compiler.location.children].forEach(child => compiler.location.removeChild(child));
+      compiler = new Template(strings, values, location, context);
+      templateCache.set(location, compiler);
     } else {
       compiler = new Template(strings, values, location, context);
       templateCache.set(location, compiler);
@@ -21,13 +25,33 @@ export function templiteral(location = this, context = this) {
   };
 }
 
+export function fragment(key) {
+  return (strings, ...values) => {
+    Object.defineProperty(values, '$$key', {
+      value: key,
+      enumerable: false,
+      configurable: false,
+      writable: false
+    });
+    return [strings, values];
+  };
+}
+
 export class Component extends HTMLElement {
   static get boundAttributes() {
+    return [];
+  }
+
+  static get boundProps() {
     return [];
   }
   
   static get observedAttributes() {
     return [...this.boundAttributes];
+  }
+
+  static get renderer() {
+    return 'render';
   }
   
   constructor() {
@@ -49,9 +73,9 @@ export class Component extends HTMLElement {
             this[this.constructor.renderer]();
           }
           attrs.add(attr);
+          
         }
       });
-      
     });
     
     Object.defineProperty(this, 'templiteral', {
@@ -67,8 +91,17 @@ export class Component extends HTMLElement {
       enumerable: false,
       get() {
         return (...args) => {
-          window.requestAnimationFrame(() => Reflect.apply(self.templiteral, self, args));
+          return new Promise(resolve => {
+            window.requestAnimationFrame(() => resolve(Reflect.apply(self.templiteral, self, args)));
+          });
         };
+      }
+    });
+
+    Object.defineProperty(this, 'fragment', {
+      enumerable: false,
+      get() {
+        return fragment;
       }
     });
   }
@@ -82,17 +115,48 @@ export class Component extends HTMLElement {
   connectedCallback() {
     if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function') {
       this[this.constructor.renderer]();
+
+      this.addEventListener('ComponentRender', () => {
+        setTimeout(this[this.constructor.renderer].bind(this), 0);
+      });
+    }
+
+    if (this[this.constructor.renderer] && this.constructor.boundProps.length) {
+      this.constructor.boundProps.map(prop => {
+        this[prop] = watch(this[prop], () => {
+          const renderEvent = new CustomEvent('ComponentRender', {
+            bubbles: true,
+            composed: true,
+            detail: {
+              component: this,
+              time: Date.now(),
+            }
+          });
+          this.dispatchEvent(renderEvent);
+          return this[this.constructor.renderer].bind(this);
+        });
+      });
     }
   }
   
   disconnectedCallback() {
     templateCache.delete(this);
+    if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function') {
+      this.removeEventListener('ComponentRender', this[this.constructor.renderer]);
+    }
   }
 }
 
 export const watch = (object, onChange) => {
   const handler = {
     get(target, property, receiver) {
+      const desc = Object.getOwnPropertyDescriptor(target, property);
+      const value = Reflect.get(target, property, receiver);
+
+      if (desc && !desc.writable && !desc.configurable && property !== 'push') {
+        return value;
+      }
+
       try {
         return new Proxy(target[property], handler);
       } catch (err) {

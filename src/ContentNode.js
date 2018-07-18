@@ -1,4 +1,4 @@
-import { startSeparator, endSeparator, valuePattern } from './patterns.js';
+import { startSeparator, endSeparator, valuePattern, valueToInt } from './patterns.js';
 
 export class ContentNode {
   constructor(node, compiler) {
@@ -7,7 +7,7 @@ export class ContentNode {
     this.base = node.nodeValue || '';
     this.indicies = this.base
       .match(valuePattern)
-      .map(index => +index.replace(startSeparator, '').replace(endSeparator, ''));
+      .map(valueToInt);
     
     this.indicies.forEach(index => this.compiler.partIndicies.set(index, this));
   }
@@ -24,13 +24,13 @@ export class ContentNode {
 
   setValue(values = []) {
     this.node.nodeValue = this.base.replace(/---!{*.}!---/g, (match) => 
-      values[+match.replace(startSeparator, '').replace(endSeparator, '')]
+      values[valueToInt(match)]
     );
   }
 
   update(values) {
     this.node.nodeValue = this.base.replace(/---!{*.}!---/g, match => {
-      const value = values[+match.replace(startSeparator, '').replace(endSeparator, '')];
+      const value = values[valueToInt(match)];
       if (Array.isArray(value)) {
         return value.join('');
       } else {

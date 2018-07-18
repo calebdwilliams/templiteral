@@ -41,13 +41,14 @@ describe('templit', () => {
         _who ? this.setAttribute('who', _who) : this.removeAttribute('who');
       }
 
-      toggleContentEditable() {
+      toggleContentEditable(who) {
+        console.log(who)
         this.pContentEditable = !this.pContentEditable;
-        this.render();
       }
 
       toggleWho(event, who) {
         event.preventDefault();
+        console.log({who});
         if (this.who === 'Caleb') {
           this.who = 'world';
         } else {
@@ -57,17 +58,11 @@ describe('templit', () => {
 
       update(event) {
         event.preventDefault();
-        const inputs = this._shadowRoot.querySelector('form').querySelectorAll('[name]');
-
-        inputs.forEach(input => {
-          // console.log(input.name, input.value);
-        });
-
-        this.who = this._shadowRoot.querySelector('input').value;
+        this.who = this.refs.value;
       }
 
       updateName() {
-        this.who = this._shadowRoot.querySelector('input').value;
+        this.who = this.refs.value;
       }
 
       render() {
@@ -106,8 +101,8 @@ describe('templit', () => {
             <button>Submit</button>
           </form>
 
-          <button (click)="this.toggleWho(event, this.who)" id="toggleWho">${this.buttonMessage}</button>
-          <button (click)="this.toggleContentEditable()" id="toggleContentEditable">Toggle content editable</button>
+          <button id="toggleWho">${this.buttonMessage}</button>
+          <button (click)="this.toggleContentEditable(this.who)" id="toggleContentEditable">Toggle content editable</button>
 
         `;
       }

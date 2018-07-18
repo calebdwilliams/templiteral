@@ -7,6 +7,7 @@ export class TRepeat extends HTMLElement {
   }
 
   connectedCallback() {
+    console.warn('t-repeat is being deprecated in favor of inline array methods.');
     this._render();
   }
 

@@ -1,10 +1,15 @@
 <!doctype HTML>
-<html>
+<html lang="en">
 <head>
   <title>Module test</title>
-  <script src="module.js" type="module"></script>
+  <script src="module.js" type="module" rel="preload"></script>
+  <meta name="description" content="Templiteral demo page.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-  <my-el></my-el>
+  <main>
+    <my-el></my-el>
+    <noscript>Yeah, that's not really going to fly here.</noscript>
+  </main>
 </body>
 </html>

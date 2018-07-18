@@ -8,11 +8,15 @@ const valuePattern = /---!{.*?(}!---)/gi;
 const eventPattern = /^\(.*\)$/gi;
 const propPattern = /^\[.*\]$/;
 
-const startSeparator = /---!\{/gi;
-const endSeparator = /\}!---/gi;
+
+
 const modelPattern = /t-model/gi;
 
 const modelSymbol = Symbol('t-model');
+const removeSymbol = Symbol('RemoveTemplate');
+
+const valueToInt = match => +match.replace(/(---!{)|(}!---)/gi, '');
+const toEventName = match => match.replace(/(\()|(\))/gi, '');
 
 class ContentNode {
   constructor(node, compiler) {
@@ -21,7 +25,7 @@ class ContentNode {
     this.base = node.nodeValue || '';
     this.indicies = this.base
       .match(valuePattern)
-      .map(index => +index.replace(startSeparator, '').replace(endSeparator, ''));
+      .map(valueToInt);
     
     this.indicies.forEach(index => this.compiler.partIndicies.set(index, this));
   }
@@ -38,13 +42,13 @@ class ContentNode {
 
   setValue(values = []) {
     this.node.nodeValue = this.base.replace(/---!{*.}!---/g, (match) => 
-      values[+match.replace(startSeparator, '').replace(endSeparator, '')]
+      values[valueToInt(match)]
     );
   }
 
   update(values) {
     this.node.nodeValue = this.base.replace(/---!{*.}!---/g, match => {
-      const value = values[+match.replace(startSeparator, '').replace(endSeparator, '')];
+      const value = values[valueToInt(match)];
       if (Array.isArray(value)) {
         return value.join('');
       } else {
@@ -64,11 +68,17 @@ class AttributeNode {
     this.boundAttrs.forEach(attribute => {
       attribute.base = attribute.value;
       const indicies = attribute.base.match(valuePattern) || [];
-      this.indicies = indicies.map(index => +index.replace(startSeparator, '').replace(endSeparator, ''));
+      this.indicies = indicies.map(valueToInt);
       this.indicies.forEach(index => this.compiler.partIndicies.set(index, this));
     });
-    
+    this.eventMap = new Map();
     this.addListeners();
+  }
+
+  addListener(eventName, method) {
+    this.node.addEventListener(eventName, method.bind(this.context));
+    this.eventMap.set(eventName, method);
+    !this.context.DEBUG ? this.node.removeAttribute(`(${eventName})`) : null;
   }
 
   addListeners() {
@@ -77,22 +87,35 @@ class AttributeNode {
         this.context[eventHandler] = this.context[eventHandler] ? this.context[eventHandler] : undefined;
         this.node.value = this.context[eventHandler];
         this.node.addEventListener('input', this._modelFunction(eventHandler));
-        this.node.addEventListener('change', this._modelFunction(eventHandler));        
+        this.node.addEventListener('change', this._modelFunction(eventHandler));
       } else {
-        const handlerName = eventHandler.replace(/(this\.)|(\(.*\))/gi, '');
-        if (typeof this.context[handlerName] !== 'function') {
-          console.error(`Method ${handlerName} is not a method of element ${this.context.tagName}`);
+        if (typeof eventHandler === 'function') {
+          this.addListener(eventName, eventHandler);
         } else {
-          const handler = this.context[handlerName].bind(this.context);
-          this.node.addEventListener(eventName, handler);
-          this.node._boundEvents = handler;
+          const handlerName = eventHandler.replace(/(this\.)|(\(.*\))/gi, '');
+          if (typeof this.context[handlerName] !== 'function') {
+            console.error(`Method ${handlerName} is not a method of element ${this.context.tagName}`);
+          } else {
+            const handler = this.context[handlerName].bind(this.context);
+            this.addListener(eventName, handler);
+          }
         }
       }
     });
   }
 
+  disconnect() {
+    if (this.eventMap.size) {
+      this.eventMap.forEach((eventHandler, eventName, eventMap) => {
+        this.node.removeEventListener(eventName, eventHandler);
+        eventMap.delete(eventName);
+      });
+    }
+  }
+
   updateProperty(attribute, attributeValue) {
     const attributeName = attribute.name.replace(/\[|\]/g, '');
+    !this.context.DEBUG ? this.node.removeAttribute(attribute.name) : null;
     this.node[attributeName] = attributeValue;
     if (attributeName === 'innerhtml') {
       this.node.innerHTML = attributeValue.join('');
@@ -109,16 +132,17 @@ class AttributeNode {
 
   update(values) {
     this.boundAttrs.forEach(attribute => {
-      const bases = attribute.base.match(/---!{*.}!---/g) || [];
-      const baseIndicies = bases.map(base => +base.replace('---!{', '').replace('}!---', ''));
+      const bases = attribute.base.match(/---!{\d+}!---/gi) || [];
+      const baseIndicies = bases.map(valueToInt);
       let attributeValue = attribute.base;
-
-      if (baseIndicies.length === 1) {
-        attributeValue = attributeValue.replace(`---!{${baseIndicies[0]}}!---`, values[baseIndicies[0]]);
-      } else if (baseIndicies.length > 1) {
-        for (let i = 0; i < baseIndicies.length; i += 1) {
-          const value = values[baseIndicies[i]] || '';
-          attributeValue = attributeValue.replace(`---!{${baseIndicies[i]}}!---`, value);
+      
+      for (let i = 0; i < baseIndicies.length; i += 1) {
+        const index = baseIndicies[i];
+        const value = values[index] || '';
+        if (typeof value !== 'function') {
+          attributeValue = attributeValue.replace(`---!{${index}}!---`, '');
+        } else {
+          this.addListener(toEventName(attribute.name), value);
         }
       }
       
@@ -140,6 +164,58 @@ class AttributeNode {
   }
 }
 
+// import { templiteral } from './templiteral';
+class DirectiveNode {
+  constructor(node, value, context, compiler, index) {
+    this.node = node;
+    this.values = value;
+    this.context = context;
+    this.compiler = compiler;
+    this.index = index;
+    this.templateMap = new Map();
+    this.compiler.partIndicies.set(index, this);
+  }
+
+  init() {
+    this.templates = this.values.map(value => {
+      const $$key = value[1].$$key;
+      let template;
+      if (this.templateMap.has($$key)) {
+        template = this.templateMap.get($$key);
+      } else {
+        template = new Template(value[0], value[1], this.node.parentNode, this.context);
+        this.templateMap.set($$key, template);
+      }
+      return template;
+    });
+  }
+
+  update(values) {
+    const newValues = values[this.index];
+    const oldValues = this.values;
+    this.values = newValues;
+    const activeKeys = new Set(this.values.map(value => value[1].$$key));
+    const previousKeys = new Set(oldValues.map(value => value[1].$$key));
+
+    if (activeKeys.size < previousKeys.size) {
+      activeKeys.forEach(key => previousKeys.delete(key));
+      previousKeys.forEach(key => {
+        const template = this.templateMap.get(key);
+        template[removeSymbol]();
+        this.templateMap.delete(key);
+      });
+    }
+
+    if (newValues.length !== oldValues.length) {
+      this.init();
+    } else {
+      this.templates.forEach((template, index) => {
+        template.update(values[this.index][index][1]);
+      });
+    }
+  }
+}
+
 class Template {
   constructor(strings, values, location, context) {
     this.strings = strings;
@@ -150,8 +226,9 @@ class Template {
     this.parts = [];
     this.partIndicies = new Map();
     this.context.$el = location;
-    
+    this.templateSymbol = Symbol('Template');
     this.eventHandlers = [];
+    this.nodes = [];
     this._init();
   }
 
@@ -162,16 +239,19 @@ class Template {
         part.setValue(this.values, this.oldValues[i]);
       } else if (part instanceof AttributeNode) {
         part.update(this.values, this.oldValues);
+      } else if (part instanceof DirectiveNode) {
+        part.init();
       }
     }
-
+    const symbol = this.templateSymbol;
+    this.nodes = Array.from(node.children).map(child => {
+      child[symbol] = true;
+      return child;
+    });
     this.location.appendChild(node);
   }
 
   _init() {
-    const base = this.strings.map((string, index) =>
-      `${string ? string : ''}${this.values[index] !== undefined ? '---!{' + index + '}!---' : ''}`
-    ).join('');
     const _base = this.strings.map((string, index) => {
       const value = this.values[index];
       const interpolationValue = `---!{${index}}!---`;
@@ -180,7 +260,7 @@ class Template {
       if (value !== undefined && !Array.isArray(value)) {
         output += interpolationValue;
       } else if (value !== undefined && Array.isArray(value)) {
-        output += `<div style="display: contents" [innerHTML]="${interpolationValue}"></div>`;
+        output += `<!-- ${interpolationValue} -->`;
       }
       return output;
     }).join('');
@@ -209,9 +289,16 @@ class Template {
               if (attribute.value.match(valuePattern) || attribute.name.match(propPattern)) {
                 boundAttrs.set(attribute.name, attribute);
               } else if (attribute.name.match(eventPattern)) {
-                const eventName = attribute.name.substring(1, attribute.name.length - 1);
-                boundEvents.set(eventName, attribute.value);
-                this.eventHandlers.push({ eventName, currentNode });
+                if (!attribute.value.match(valuePattern)) {
+                  const eventName = attribute.name.substring(1, attribute.name.length - 1);
+                  boundEvents.set(eventName, attribute.value);
+                  this.eventHandlers.push({ eventName, currentNode });
+                } else if (attribute.value.match(valuePattern)) {
+                  const eventName = attribute.name.substring(1, attribute.name.length - 1);
+                  const handler = this.values[valueToInt(attribute.value)];
+                  boundEvents.set(eventName, handler);
+                  this.eventHandlers.push({ eventName, currentNode });
+                }
               } else if (attribute.name.match(modelPattern)) {
                 boundEvents.set(modelSymbol, attribute.value);
               } else if (attribute.name.match('ref')) {
@@ -230,6 +317,14 @@ class Template {
             const contentNode = new ContentNode(currentNode, this);
             parts.push(contentNode);
           }
+          break;
+        }
+        case 8: {
+          const valuesPart = valueToInt(currentNode.nodeValue);
+          const initial = this.values[valuesPart];
+          const value = this.values[valuesPart];
+          const directiveNode = new DirectiveNode(currentNode, value, this.context, this, valuesPart, initial);
+          parts.push(directiveNode);
           break;
         }
         }
@@ -251,6 +346,13 @@ class Template {
       }
     }
   }
+
+  [removeSymbol]() {
+    this.nodes.forEach(templateChild => this.location.removeChild(templateChild));
+    this.parts
+      .filter(part => part instanceof AttributeNode)
+      .forEach(part => part.disconnect());
+  }
 }
 
 class TRepeat extends HTMLElement {
@@ -260,6 +362,7 @@ class TRepeat extends HTMLElement {
   }
 
   connectedCallback() {
+    console.warn('t-repeat is being deprecated in favor of inline array methods.');
     this._render();
   }
 
@@ -308,8 +411,12 @@ function templiteral(location = this, context = this) {
   return (strings, ...values) => {
     let compiler = templateCache.get(location);
 
-    if (compiler) {
+    if (compiler && strings === compiler.strings) {
       compiler.update(values);
+    } else if (compiler) {
+      [...compiler.location.children].forEach(child => compiler.location.removeChild(child));
+      compiler = new Template(strings, values, location, context);
+      templateCache.set(location, compiler);
     } else {
       compiler = new Template(strings, values, location, context);
       templateCache.set(location, compiler);
@@ -319,13 +426,33 @@ function templiteral(location = this, context = this) {
   };
 }
 
+function fragment(key) {
+  return (strings, ...values) => {
+    Object.defineProperty(values, '$$key', {
+      value: key,
+      enumerable: false,
+      configurable: false,
+      writable: false
+    });
+    return [strings, values];
+  };
+}
+
 class Component extends HTMLElement {
   static get boundAttributes() {
+    return [];
+  }
+
+  static get boundProps() {
     return [];
   }
   
   static get observedAttributes() {
     return [...this.boundAttributes];
+  }
+
+  static get renderer() {
+    return 'render';
   }
   
   constructor() {
@@ -347,9 +474,9 @@ class Component extends HTMLElement {
             this[this.constructor.renderer]();
           }
           attrs.add(attr);
+          
         }
       });
-      
     });
     
     Object.defineProperty(this, 'templiteral', {
@@ -365,8 +492,17 @@ class Component extends HTMLElement {
       enumerable: false,
       get() {
         return (...args) => {
-          window.requestAnimationFrame(() => Reflect.apply(self.templiteral, self, args));
+          return new Promise(resolve => {
+            window.requestAnimationFrame(() => resolve(Reflect.apply(self.templiteral, self, args)));
+          });
         };
+      }
+    });
+
+    Object.defineProperty(this, 'fragment', {
+      enumerable: false,
+      get() {
+        return fragment;
       }
     });
   }
@@ -380,17 +516,48 @@ class Component extends HTMLElement {
   connectedCallback() {
     if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function') {
       this[this.constructor.renderer]();
+
+      this.addEventListener('ComponentRender', () => {
+        setTimeout(this[this.constructor.renderer].bind(this), 0);
+      });
+    }
+
+    if (this[this.constructor.renderer] && this.constructor.boundProps.length) {
+      this.constructor.boundProps.map(prop => {
+        this[prop] = watch(this[prop], () => {
+          const renderEvent = new CustomEvent('ComponentRender', {
+            bubbles: true,
+            composed: true,
+            detail: {
+              component: this,
+              time: Date.now(),
+            }
+          });
+          this.dispatchEvent(renderEvent);
+          return this[this.constructor.renderer].bind(this);
+        });
+      });
     }
   }
   
   disconnectedCallback() {
     templateCache.delete(this);
+    if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function') {
+      this.removeEventListener('ComponentRender', this[this.constructor.renderer]);
+    }
   }
 }
 
 const watch = (object, onChange) => {
   const handler = {
     get(target, property, receiver) {
+      const desc = Object.getOwnPropertyDescriptor(target, property);
+      const value = Reflect.get(target, property, receiver);
+
+      if (desc && !desc.writable && !desc.configurable && property !== 'push') {
+        return value;
+      }
+
       try {
         return new Proxy(target[property], handler);
       } catch (err) {
@@ -411,6 +578,7 @@ const watch = (object, onChange) => {
 };
 
 exports.templiteral = templiteral;
+exports.fragment = fragment;
 exports.Component = Component;
 exports.watch = watch;
 

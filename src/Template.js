@@ -1,6 +1,7 @@
 import { ContentNode } from './ContentNode';
 import { AttributeNode } from './AttributeNode';
-import { valuePattern, eventPattern, propPattern, modelPattern, modelSymbol } from './patterns';
+import { valuePattern, eventPattern, propPattern, modelPattern, modelSymbol, valueToInt, removeSymbol } from './patterns';
+import { DirectiveNode } from './DirectiveNode';
 
 export class Template {
   constructor(strings, values, location, context) {
@@ -12,8 +13,9 @@ export class Template {
     this.parts = [];
     this.partIndicies = new Map();
     this.context.$el = location;
-    
+    this.templateSymbol = Symbol('Template');
     this.eventHandlers = [];
+    this.nodes = [];
     this._init();
   }
 
@@ -24,16 +26,19 @@ export class Template {
         part.setValue(this.values, this.oldValues[i]);
       } else if (part instanceof AttributeNode) {
         part.update(this.values, this.oldValues);
+      } else if (part instanceof DirectiveNode) {
+        part.init();
       }
     }
-
+    const symbol = this.templateSymbol;
+    this.nodes = Array.from(node.children).map(child => {
+      child[symbol] = true;
+      return child;
+    });
     this.location.appendChild(node);
   }
 
   _init() {
-    const base = this.strings.map((string, index) =>
-      `${string ? string : ''}${this.values[index] !== undefined ? '---!{' + index + '}!---' : ''}`
-    ).join('');
     const _base = this.strings.map((string, index) => {
       const value = this.values[index];
       const interpolationValue = `---!{${index}}!---`;
@@ -42,7 +47,7 @@ export class Template {
       if (value !== undefined && !Array.isArray(value)) {
         output += interpolationValue;
       } else if (value !== undefined && Array.isArray(value)) {
-        output += `<div style="display: contents" [innerHTML]="${interpolationValue}"></div>`;
+        output += `<!-- ${interpolationValue} -->`;
       }
       return output;
     }).join('');
@@ -71,9 +76,16 @@ export class Template {
               if (attribute.value.match(valuePattern) || attribute.name.match(propPattern)) {
                 boundAttrs.set(attribute.name, attribute);
               } else if (attribute.name.match(eventPattern)) {
-                const eventName = attribute.name.substring(1, attribute.name.length - 1);
-                boundEvents.set(eventName, attribute.value);
-                this.eventHandlers.push({ eventName, currentNode });
+                if (!attribute.value.match(valuePattern)) {
+                  const eventName = attribute.name.substring(1, attribute.name.length - 1);
+                  boundEvents.set(eventName, attribute.value);
+                  this.eventHandlers.push({ eventName, currentNode });
+                } else if (attribute.value.match(valuePattern)) {
+                  const eventName = attribute.name.substring(1, attribute.name.length - 1);
+                  const handler = this.values[valueToInt(attribute.value)];
+                  boundEvents.set(eventName, handler);
+                  this.eventHandlers.push({ eventName, currentNode });
+                }
               } else if (attribute.name.match(modelPattern)) {
                 boundEvents.set(modelSymbol, attribute.value);
               } else if (attribute.name.match('ref')) {
@@ -94,6 +106,14 @@ export class Template {
           }
           break;
         }
+        case 8: {
+          const valuesPart = valueToInt(currentNode.nodeValue);
+          const initial = this.values[valuesPart];
+          const value = this.values[valuesPart];
+          const directiveNode = new DirectiveNode(currentNode, value, this.context, this, valuesPart, initial);
+          parts.push(directiveNode);
+          break;
+        }
         }
       } else {
         this.templiteralParts.add(currentNode);
@@ -112,5 +132,12 @@ export class Template {
         );
       }
     }
+  }
+
+  [removeSymbol]() {
+    this.nodes.forEach(templateChild => this.location.removeChild(templateChild));
+    this.parts
+      .filter(part => part instanceof AttributeNode)
+      .forEach(part => part.disconnect());
   }
 }

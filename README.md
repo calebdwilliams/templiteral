@@ -68,10 +68,10 @@ Now when an instance of `my-el` is inserted into the DOM, the `render` method wi
 
 ## Event bindings
 
-Templiteral provides Angular-style event bindings using the `(<eventName>)="this.eventHandler(...args)"` syntax.
+Templiteral provides Angular-style event bindings using the `(<eventName>)="${this.eventHandler}"` syntax.
 
 ```html
-<button (click)="this.logClickEvent(event)">Log a message</button>
+<button (click)="${this.logClickEvent}">Log a message</button>
 ```
 
 This would call the component's `logClickEvent` with the event object as the argument. As you might expect, you can also pass object properties or other arguments in the function invocation as well.
@@ -141,7 +141,26 @@ and in your component file:
 this.username = this.refs.username.value;
 ```
 
-## Repeat directive
+### Array templates
+
+Loops are created using the built-in `Array` prototype methods and the use of the `fragment` function. `fragment` takes in a unique key for each element in the array. Normally, the item's index should suffice, but in cases where there will be significant re-rendering, something else might be necessary.
+
+```jsx
+<ul>
+  ${this.todos = todo => this.fragment(todo)`
+    <li>
+      <label>
+        <input type="checkbox" (change)="${this.done}">
+        ${todo.title}
+      </label>
+    </li>
+  `}
+</ul>
+```
+
+The fragment's `this` methods will still be referenced to the containing component.
+
+## Repeat directive (deprecated)
 
 Need to use the same template on multiple items? You can use the `<t-repeat>` element to loop over data:
 
