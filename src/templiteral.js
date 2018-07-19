@@ -64,7 +64,7 @@ export class Component extends HTMLElement {
           return this.getAttribute(attr);
         },
         set(_attr) {
-          if (_attr) {
+          if (_attr || attr === '') {
             this.setAttribute(attr, _attr);
           } else {
             this.removeAttribute(attr);
@@ -73,7 +73,6 @@ export class Component extends HTMLElement {
             this[this.constructor.renderer]();
           }
           attrs.add(attr);
-          
         }
       });
     });
@@ -109,6 +108,8 @@ export class Component extends HTMLElement {
   attributeChangedCallback(name, oldValue, newValue) {
     if (oldValue !== newValue) {
       this[name] = newValue;
+    } else if (newValue === '' && this.hasAttribute(name)) {
+      this[name] = true;
     }
   }
   
