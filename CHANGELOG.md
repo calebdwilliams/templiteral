@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.6.1"></a>
+## [2.6.1](https://github.com/calebdwilliams/templiteral/compare/v2.6.0...v2.6.1) (2018-07-19)
+
+
+### Bug Fixes
+
+* **Component:** Changed boundAttrubutes setter to work with named attributes with no values eg: 'disabled' or 'required' for Component inputs ([de8af6f](https://github.com/calebdwilliams/templiteral/commit/de8af6f))
+
+
+
 <a name="2.6.0"></a>
 # [2.6.0](https://github.com/calebdwilliams/templiteral/compare/v2.5.0...v2.6.0) (2018-07-18)
 
