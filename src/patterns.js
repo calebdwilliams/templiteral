@@ -8,6 +8,7 @@ export const modelPattern = /t-model/gi;
 export const modelNamesPattern = /t-model=?".*?"/gi;
 export const modelSymbol = Symbol('t-model');
 export const removeSymbol = Symbol('RemoveTemplate');
+export const rendererSymbol = Symbol('Renderer');
 
 export const valueToInt = match => +match.replace(/(---!{)|(}!---)/gi, '');
 export const toEventName = match => match.replace(/(\()|(\))/gi, '');

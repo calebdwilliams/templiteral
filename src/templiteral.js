@@ -1,4 +1,5 @@
 import { Template } from './Template.js';
+import { rendererSymbol, removeSymbol } from './patterns.js';
 import './TRepeat';
 import './TIf';
 
@@ -61,7 +62,7 @@ export class Component extends HTMLElement {
     this.constructor.boundAttributes.map((attr, index, currentArray) => {
       Object.defineProperty(this, attr, {
         get() {
-          return this.getAttribute(attr);
+          return this.getAttribute(attr) || this.hasAttribute(attr);
         },
         set(_attr) {
           if (_attr || attr === '') {
@@ -82,26 +83,27 @@ export class Component extends HTMLElement {
         const location = self.shadowRoot ? self.shadowRoot : self;
         return templiteral(location, self);
       },
-      enumerable: false,
-      configurable: false
+      configurable: false,
+      enumerable: false
     });
     
     Object.defineProperty(this, 'html', {
-      enumerable: false,
       get() {
         return (...args) => {
-          return new Promise(resolve => {
-            window.requestAnimationFrame(() => resolve(Reflect.apply(self.templiteral, self, args)));
-          });
+          return new Promise(resolve => 
+            window.requestAnimationFrame(() => resolve(Reflect.apply(self.templiteral, self, args)))
+          );
         };
-      }
+      },
+      configurable: false,
+      enumerable: false
     });
 
     Object.defineProperty(this, 'fragment', {
+      value: fragment,
+      configurable: false,
       enumerable: false,
-      get() {
-        return fragment;
-      }
+      writable: false
     });
   }
 
@@ -145,6 +147,11 @@ export class Component extends HTMLElement {
     if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function') {
       this.removeEventListener('ComponentRender', this[this.constructor.renderer]);
     }
+    this[rendererSymbol][removeSymbol]();
+  }
+
+  emit(eventName, detail) {
+    this.dispatchEvent(new CustomEvent(eventName, { detail }));
   }
 }
 

@@ -1,4 +1,4 @@
-import { propPattern, startSeparator, endSeparator, valuePattern, modelSymbol, toEventName, valueToInt } from './patterns.js';
+import { propPattern, valuePattern, modelSymbol, toEventName, valueToInt } from './patterns.js';
 
 export class AttributeNode {
   constructor(node, boundAttrs, boundEvents, context, compiler) {
@@ -82,7 +82,7 @@ export class AttributeNode {
         const index = baseIndicies[i];
         const value = values[index] || '';
         if (typeof value !== 'function') {
-          attributeValue = attributeValue.replace(`---!{${index}}!---`, '');
+          attributeValue = attributeValue.replace(`---!{${index}}!---`, value);
         } else {
           this.addListener(toEventName(attribute.name), value);
         }

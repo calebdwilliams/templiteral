@@ -1,6 +1,6 @@
 import { ContentNode } from './ContentNode';
 import { AttributeNode } from './AttributeNode';
-import { valuePattern, eventPattern, propPattern, modelPattern, modelSymbol, valueToInt, removeSymbol } from './patterns';
+import { valuePattern, eventPattern, propPattern, modelPattern, modelSymbol, valueToInt, removeSymbol, rendererSymbol } from './patterns';
 import { DirectiveNode } from './DirectiveNode';
 
 export class Template {
@@ -10,6 +10,7 @@ export class Template {
     this.oldValues = values.map((value, index) => `---!{${index}}!---`);
     this.location = location;
     this.context = context;
+    this.context.refs = this.context.refs || {};
     this.parts = [];
     this.partIndicies = new Map();
     this.context.$el = location;
@@ -36,6 +37,17 @@ export class Template {
       return child;
     });
     this.location.appendChild(node);
+
+    if (!this.context[rendererSymbol]) {
+      Object.defineProperty(this, rendererSymbol, {
+        value: this,
+        enumerable: false,
+        configurable: false,
+        writable: false
+      });
+
+      this.context.onInit && typeof this.context.onInit === 'function' && this.context.onInit();
+    }
   }
 
   _init() {
@@ -61,7 +73,6 @@ export class Template {
   }
 
   _walk(walker, parts) {
-    this.context.refs = this.context.refs || {};
     while (walker.nextNode()) {
       const { currentNode } = walker;
       if (!currentNode.__templiteralCompiler) {

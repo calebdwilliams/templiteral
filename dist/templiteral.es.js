@@ -8,6 +8,7 @@ const modelPattern = /t-model/gi;
 
 const modelSymbol = Symbol('t-model');
 const removeSymbol = Symbol('RemoveTemplate');
+const rendererSymbol = Symbol('Renderer');
 
 const valueToInt = match => +match.replace(/(---!{)|(}!---)/gi, '');
 const toEventName = match => match.replace(/(\()|(\))/gi, '');
@@ -134,7 +135,7 @@ class AttributeNode {
         const index = baseIndicies[i];
         const value = values[index] || '';
         if (typeof value !== 'function') {
-          attributeValue = attributeValue.replace(`---!{${index}}!---`, '');
+          attributeValue = attributeValue.replace(`---!{${index}}!---`, value);
         } else {
           this.addListener(toEventName(attribute.name), value);
         }
@@ -217,6 +218,7 @@ class Template {
     this.oldValues = values.map((value, index) => `---!{${index}}!---`);
     this.location = location;
     this.context = context;
+    this.context.refs = this.context.refs || {};
     this.parts = [];
     this.partIndicies = new Map();
     this.context.$el = location;
@@ -243,6 +245,17 @@ class Template {
       return child;
     });
     this.location.appendChild(node);
+
+    if (!this.context[rendererSymbol]) {
+      Object.defineProperty(this, rendererSymbol, {
+        value: this,
+        enumerable: false,
+        configurable: false,
+        writable: false
+      });
+
+      this.context.onInit && typeof this.context.onInit === 'function' && this.context.onInit();
+    }
   }
 
   _init() {
@@ -268,7 +281,6 @@ class Template {
   }
 
   _walk(walker, parts) {
-    this.context.refs = this.context.refs || {};
     while (walker.nextNode()) {
       const { currentNode } = walker;
       if (!currentNode.__templiteralCompiler) {
@@ -456,7 +468,7 @@ class Component extends HTMLElement {
     this.constructor.boundAttributes.map((attr, index, currentArray) => {
       Object.defineProperty(this, attr, {
         get() {
-          return this.getAttribute(attr);
+          return this.getAttribute(attr) || this.hasAttribute(attr);
         },
         set(_attr) {
           if (_attr || attr === '') {
@@ -477,26 +489,27 @@ class Component extends HTMLElement {
         const location = self.shadowRoot ? self.shadowRoot : self;
         return templiteral(location, self);
       },
-      enumerable: false,
-      configurable: false
+      configurable: false,
+      enumerable: false
     });
     
     Object.defineProperty(this, 'html', {
-      enumerable: false,
       get() {
         return (...args) => {
-          return new Promise(resolve => {
-            window.requestAnimationFrame(() => resolve(Reflect.apply(self.templiteral, self, args)));
-          });
+          return new Promise(resolve => 
+            window.requestAnimationFrame(() => resolve(Reflect.apply(self.templiteral, self, args)))
+          );
         };
-      }
+      },
+      configurable: false,
+      enumerable: false
     });
 
     Object.defineProperty(this, 'fragment', {
+      value: fragment,
+      configurable: false,
       enumerable: false,
-      get() {
-        return fragment;
-      }
+      writable: false
     });
   }
 
@@ -540,6 +553,11 @@ class Component extends HTMLElement {
     if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function') {
       this.removeEventListener('ComponentRender', this[this.constructor.renderer]);
     }
+    this[rendererSymbol][removeSymbol]();
+  }
+
+  emit(eventName, detail) {
+    this.dispatchEvent(new CustomEvent(eventName, { detail }));
   }
 }
 
