@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.7.0"></a>
+# [2.7.0](https://github.com/calebdwilliams/templiteral/compare/v2.6.1...v2.7.0) (2018-07-20)
+
+
+### Features
+
+* **Component:** Added simple custom event emitter utility to Component. Also, top-level components now clean up after themselves ([031e49d](https://github.com/calebdwilliams/templiteral/commit/031e49d))
+
+
+
 <a name="2.6.1"></a>
 ## [2.6.1](https://github.com/calebdwilliams/templiteral/compare/v2.6.0...v2.6.1) (2018-07-19)
 
