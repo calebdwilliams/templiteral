@@ -65,7 +65,7 @@ export class Component extends HTMLElement {
           return this.getAttribute(attr) || this.hasAttribute(attr);
         },
         set(_attr) {
-          if (_attr || attr === '') {
+          if (_attr || _attr === '') {
             this.setAttribute(attr, _attr);
           } else {
             this.removeAttribute(attr);
