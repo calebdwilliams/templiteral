@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.7.1"></a>
+## [2.7.1](https://github.com/calebdwilliams/templiteral/compare/v2.7.0...v2.7.1) (2018-07-20)
+
+
+### Bug Fixes
+
+* **Component:** Fixed an issue where setter wouldn't recognize presence attributes ([0fe2ce0](https://github.com/calebdwilliams/templiteral/commit/0fe2ce0))
+
+
+
 <a name="2.7.0"></a>
 # [2.7.0](https://github.com/calebdwilliams/templiteral/compare/v2.6.1...v2.7.0) (2018-07-20)
 
