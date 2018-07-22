@@ -147,7 +147,7 @@ export class Component extends HTMLElement {
     if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function') {
       this.removeEventListener('ComponentRender', this[this.constructor.renderer]);
     }
-    this[rendererSymbol][removeSymbol]();
+    this[rendererSymbol] && this[rendererSymbol][removeSymbol]();
   }
 
   emit(eventName, detail) {
