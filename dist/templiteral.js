@@ -8,6 +8,7 @@ const propPattern = /^\[.*\]$/;
 
 
 const modelPattern = /t-model/gi;
+const matchPattern = /---!{\d+}!---/gi;
 
 const modelSymbol = Symbol('t-model');
 const removeSymbol = Symbol('RemoveTemplate');
@@ -28,31 +29,10 @@ class ContentNode {
     this.indicies.forEach(index => this.compiler.partIndicies.set(index, this));
   }
 
-  set value(_value) {
-    const newValue = this.base.replace(valuePattern, _value);
-    this.value !== newValue ?
-      this.node.nodeValue = newValue : null;
-  }
-
-  get value() {
-    return this.node.nodeValue;
-  }
-
-  setValue(values = []) {
-    this.node.nodeValue = this.base.replace(/---!{*.}!---/g, (match) => 
-      values[valueToInt(match)]
-    );
-  }
-
   update(values) {
-    this.node.nodeValue = this.base.replace(/---!{*.}!---/g, match => {
-      const value = values[valueToInt(match)];
-      if (Array.isArray(value)) {
-        return value.join('');
-      } else {
-        return value === null ? '' : value;
-      }
-    });
+    this.node.nodeValue = this.base.replace(matchPattern, match => 
+      values[valueToInt(match)] === null ? '' : values[valueToInt(match)]
+    );
   }
 }
 
@@ -130,7 +110,7 @@ class AttributeNode {
 
   update(values) {
     this.boundAttrs.forEach(attribute => {
-      const bases = attribute.base.match(/---!{\d+}!---/gi) || [];
+      const bases = attribute.base.match(matchPattern) || [];
       const baseIndicies = bases.map(valueToInt);
       let attributeValue = attribute.base;
       
@@ -234,9 +214,7 @@ class Template {
   _append(node) {
     for (let i = 0; i < this.parts.length; i += 1) {
       const part = this.parts[i];
-      if (part instanceof ContentNode) {
-        part.setValue(this.values, this.oldValues[i]);
-      } else if (part instanceof AttributeNode) {
+      if (part instanceof AttributeNode || part instanceof ContentNode) {
         part.update(this.values, this.oldValues);
       } else if (part instanceof DirectiveNode) {
         part.init();

@@ -23,9 +23,7 @@ export class Template {
   _append(node) {
     for (let i = 0; i < this.parts.length; i += 1) {
       const part = this.parts[i];
-      if (part instanceof ContentNode) {
-        part.setValue(this.values, this.oldValues[i]);
-      } else if (part instanceof AttributeNode) {
+      if (part instanceof AttributeNode || part instanceof ContentNode) {
         part.update(this.values, this.oldValues);
       } else if (part instanceof DirectiveNode) {
         part.init();

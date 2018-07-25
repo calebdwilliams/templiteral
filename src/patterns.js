@@ -5,6 +5,7 @@ export const sanitizePattern = /^this\./;
 export const startSeparator = /---!\{/gi;
 export const endSeparator = /\}!---/gi;
 export const modelPattern = /t-model/gi;
+export const matchPattern = /---!{\d+}!---/gi;
 export const modelNamesPattern = /t-model=?".*?"/gi;
 export const modelSymbol = Symbol('t-model');
 export const removeSymbol = Symbol('RemoveTemplate');

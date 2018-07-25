@@ -1,4 +1,4 @@
-import { propPattern, valuePattern, modelSymbol, toEventName, valueToInt } from './patterns.js';
+import { matchPattern, propPattern, valuePattern, modelSymbol, toEventName, valueToInt } from './patterns.js';
 
 export class AttributeNode {
   constructor(node, boundAttrs, boundEvents, context, compiler) {
@@ -74,7 +74,7 @@ export class AttributeNode {
 
   update(values) {
     this.boundAttrs.forEach(attribute => {
-      const bases = attribute.base.match(/---!{\d+}!---/gi) || [];
+      const bases = attribute.base.match(matchPattern) || [];
       const baseIndicies = bases.map(valueToInt);
       let attributeValue = attribute.base;
       

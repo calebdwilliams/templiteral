@@ -90,30 +90,28 @@ Templiteral exports a `Component` abstract class that provides a significant boi
 
 In addition, `Component` adds a static getter for a render method (`renderer`) which will be called when any bound attribute changes. Along with the renderer, a new element method, `html` serves as an alias for `this.templiteral()`:
 
+[See this demo on CodePen.](https://codepen.io/calebdwilliams/pen/qyOGJO?editors=1010#0)
+
 ```javascript
 import { Component } from 'templiteral';
 
 class HelloWorld extends Component {
-  static get boundAttributes() {
-    return ['who', 'now'];
-  }
-
-  static get renderer() { return 'render'; }
+  static get boundAttributes() { return ['who', 'now']; }
 
   constructor() {
     super();
-    this.who = 'world';
+    this.interval = setInterval(this.updateTime.bind(this), 100);
   }
-
-  connectedCallback() {
-    super.connectedCallback();
-    setInterval(this.updateTime.bind(this), 100);
+  
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.clearInterval(this.interval);
   }
-
+ 
   updateTime() {
     this.now = new Date().toLocaleString();    
   }
-
+ 
   render() {
     this.html`
       <h1>Hello ${this.who}</h1>
@@ -121,11 +119,28 @@ class HelloWorld extends Component {
     `;
   }
 }
-
+ 
 customElements.define('hello-world', HelloWorld);
 ```
 
-The `<hello-world></hello-world>` element would now have attributes in sync with the data and would automatically re-render the time every 100 milliseconds.
+The `<hello-world who="world"></hello-world>` element would now have attributes in sync with the data and would automatically re-render the time every 100 milliseconds.
+
+The `Component` base class also includes a custom event emitter utility simply called `emit`. `Component.emit` takes two arguments, the first is a string representing the `CustomEvent` name and the second is the detail object on the event for passing information outside of the component. [These events are, by default, composed](https://developer.mozilla.org/en-US/docs/Web/API/Event/Event) so they will bubble through barriers in the shadow DOM if one is attached.
+
+[See this demo on CodePen.](https://codepen.io/calebdwilliams/pen/MBobmZ)
+
+```javascript
+import { Component } from 'templiteral';
+
+class EmitExample extends Component {
+  render() {
+    this.html`
+      <button (click)=${() => this.emit('button-clicked', new Date())}">Will emit an event called <code>button-clicked</code></button>`;
+  }
+}
+```
+
+One caveat to using `Component` is that the immediate renderer will not be called until all `boundAttributes` have been defined. Typically this should be done in the `constructor`, `connectedCallback` or `onInit`; however, when you override the `constructor`, `connectedCallback` or `disconnectedCallback` methods, make sure to call the method on `super` first to preserve functionality. `onInit` is a utility method that gets called when the component is done appending content to the DOM.
 
 ## Element references
 
@@ -140,6 +155,8 @@ and in your component file:
 ```javascript
 this.username = this.refs.username.value;
 ```
+
+If you intend to perform some action on element references, it is probably best to use the `onInit` lifecycle method described above.
 
 ### Array templates
 
