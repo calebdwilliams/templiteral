@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.7.4"></a>
+## [2.7.4](https://github.com/calebdwilliams/templiteral/compare/v2.7.3...v2.7.4) (2018-07-26)
+
+
+### Bug Fixes
+
+* **AttributeNode:** Fixed an issue that added multiple event listeners to a node ([da6f8c9](https://github.com/calebdwilliams/templiteral/commit/da6f8c9))
+
+
+
 <a name="2.7.3"></a>
 ## [2.7.3](https://github.com/calebdwilliams/templiteral/compare/v2.7.2...v2.7.3) (2018-07-25)
 
