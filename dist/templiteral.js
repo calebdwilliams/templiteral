@@ -54,9 +54,11 @@ class AttributeNode {
   }
 
   addListener(eventName, method) {
-    this.node.addEventListener(eventName, method.bind(this.context));
-    this.eventMap.set(eventName, method);
-    !this.context.DEBUG ? this.node.removeAttribute(`(${eventName})`) : null;
+    if (!this.eventMap.get(eventName)) {
+      this.node.addEventListener(eventName, method.bind(this.context));
+      this.eventMap.set(eventName, method);
+      !this.context.DEBUG ? this.node.removeAttribute(`(${eventName})`) : null;
+    }
   }
 
   addListeners() {
