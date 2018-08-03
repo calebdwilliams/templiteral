@@ -16,7 +16,7 @@
     "Angular",
     "React"
   ],
-  "version": "2.7.3",
+  "version": "3.0.0",
   "description": "",
   "main": "dist/templiteral.js",
   "module": "dist/templiteral.es.js",
