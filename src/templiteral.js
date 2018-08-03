@@ -1,7 +1,6 @@
 import { Template } from './Template.js';
 import { rendererSymbol, removeSymbol } from './patterns.js';
-import './TRepeat';
-import './TIf';
+import './TIf.js';
 
 const templateCache = new WeakMap();
 
@@ -39,26 +38,45 @@ export function fragment(key) {
 }
 
 export class Component extends HTMLElement {
-  static get boundAttributes() {
-    return [];
-  }
-
-  static get boundProps() {
-    return [];
-  }
+  static get boundAttributes() { return []; }
+  static get observedAttributes() { return [...this.boundAttributes]; }
+  static get renderer() { return 'render'; }
   
-  static get observedAttributes() {
-    return [...this.boundAttributes];
-  }
-
-  static get renderer() {
-    return 'render';
-  }
-  
-  constructor() {
+  constructor(state = {}) {
     super();
     const self = this;
     const attrs = new Set();
+    const stateProxy = watch(state, (target, property, descriptor) => {
+      try {
+        if (this.constructor.boundAttributes.includes(property)) {
+          if (descriptor.value === false || descriptor.value === null) {
+            this.removeAttribute(property);
+          } else {
+            this.setAttribute(property, descriptor.value);
+          }
+        }
+        this[this.constructor.renderer].bind(this)();
+      } catch (err) {
+        console.log(err);
+      }
+    });
+
+    Object.defineProperty(this, 'state', {
+      get() {
+        return stateProxy;
+      },
+      set(_state) {
+        Object.keys(_state).forEach(key => {
+          if (typeof _state[key] !== 'string' || typeof _state[key] !== 'number') {
+            state[key] = _state[key];
+          } else {
+            state[key] = watch(_state[key], () => this[this.constructor.renderer]());
+          }
+        });
+        return true;
+      }
+    });
+
     this.constructor.boundAttributes.map((attr, index, currentArray) => {
       Object.defineProperty(this, attr, {
         get() {
@@ -89,11 +107,7 @@ export class Component extends HTMLElement {
     
     Object.defineProperty(this, 'html', {
       get() {
-        return (...args) => {
-          return new Promise(resolve => 
-            window.requestAnimationFrame(() => resolve(Reflect.apply(self.templiteral, self, args)))
-          );
-        };
+        return (...args) => Reflect.apply(self.templiteral, self, args);
       },
       configurable: false,
       enumerable: false
@@ -109,49 +123,49 @@ export class Component extends HTMLElement {
 
   attributeChangedCallback(name, oldValue, newValue) {
     if (oldValue !== newValue) {
-      this[name] = newValue;
+      this.state[name] = newValue;
     } else if (newValue === '' && this.hasAttribute(name)) {
-      this[name] = true;
+      this.state[name] = true;
     }
+    this.emit('ComponentRender', {
+      component: this,
+      time: Date.now(),
+    });
+  }
+
+  get $$renderListener() {
+    return debounce(this[this.constructor.renderer].bind(this), 100, true);
   }
   
   connectedCallback() {
     if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function') {
       this[this.constructor.renderer]();
 
-      this.addEventListener('ComponentRender', () => {
-        setTimeout(this[this.constructor.renderer].bind(this), 0);
-      });
+      if (!this.$$listening) {
+        this.addEventListener('ComponentRender', this.$$renderListener);
+      } else {
+        console.log(this, this.$$listening, !this.$$listening )
+      }
     }
-
-    if (this[this.constructor.renderer] && this.constructor.boundProps.length) {
-      this.constructor.boundProps.map(prop => {
-        this[prop] = watch(this[prop], () => {
-          const renderEvent = new CustomEvent('ComponentRender', {
-            bubbles: true,
-            composed: true,
-            detail: {
-              component: this,
-              time: Date.now(),
-            }
-          });
-          this.dispatchEvent(renderEvent);
-          return this[this.constructor.renderer].bind(this);
-        });
-      });
-    }
+    
+    this.$$listening = true;
   }
   
   disconnectedCallback() {
     templateCache.delete(this);
     if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function') {
-      this.removeEventListener('ComponentRender', this[this.constructor.renderer]);
+      this.removeEventListener('ComponentRender', this.$$renderListener);
+      this.$$listening = false;
     }
     this[rendererSymbol] && this[rendererSymbol][removeSymbol]();
   }
 
   emit(eventName, detail) {
-    this.dispatchEvent(new CustomEvent(eventName, { detail }));
+    this.dispatchEvent(new CustomEvent(eventName, { 
+      bubbles: true,
+      composed: true,
+      detail 
+    }));
   }
 }
 
@@ -172,14 +186,37 @@ export const watch = (object, onChange) => {
       }
     },
     defineProperty(target, property, descriptor) {
-      onChange();
-      return Reflect.defineProperty(target, property, descriptor);
+      const define = Reflect.defineProperty(target, property, descriptor);
+      onChange(target, property, descriptor);
+      return define;
     },
-    deleteProperty(target, property) {
-      onChange();
-      return Reflect.deleteProperty(target, property);
+    deleteProperty(target, property, descriptor) {
+      const deleted = Reflect.deleteProperty(target, property);
+      onChange(target, property, descriptor);
+      return deleted;
     }
   };
 
   return new Proxy(object, handler);
+};
+
+export const debounce = (fn, wait, immediate) => {
+  let timeout;
+
+  return function executed(...args) {
+    const context = this;
+    
+    const later = () => {
+      timeout = null;
+      !immediate && Reflect.apply(fn, context, args);
+    };
+
+    const callNow = immediate && !timeout;
+
+    clearTimeout(timeout);
+
+    timeout = setTimeout(later, wait);
+
+    callNow && Reflect.apply(fn, context, args);
+  };
 };

@@ -16,7 +16,7 @@
     "Angular",
     "React"
   ],
-  "version": "2.7.4",
+  "version": "2.7.3",
   "description": "",
   "main": "dist/templiteral.js",
   "module": "dist/templiteral.es.js",
@@ -28,6 +28,7 @@
     "release": "standard-version",
     "postrelease": "git push --follow-tags origin master; npm publish",
     "start": "node server.js",
+    "pretest": "rm -Rf coverage",
     "test": "karma start"
   },
   "license": "SEE LICENSE IN LICENSE.md",
@@ -43,8 +44,10 @@
     "jasmine-core": "^2.99.1",
     "karma": "^1.7.1",
     "karma-chrome-launcher": "^2.2.0",
+    "karma-coverage": "^1.1.2",
     "karma-coverage-istanbul-reporter": "^1.4.3",
     "karma-jasmine": "^1.1.2",
+    "karma-rollup-plugin": "^0.2.4",
     "karma-rollup-preprocessor": "^5.1.1",
     "rollup": "^0.50.1",
     "rollup-plugin-uglify-es": "0.0.1",

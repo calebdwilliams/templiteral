@@ -1,5 +1,4 @@
 import { Component } from '../templiteral.js';
-import { BindTo } from './Component.test.js';
 
 class MyEl extends Component {
   static get tagName() { return 'my-el'; }
@@ -76,7 +75,7 @@ class MyEl extends Component {
     this._ = this.html`
       <style>
         * {
-          font-family: Helvetica
+          font-family: Helvetica, Times;
         }
         .everyone {
           color: tomato;
@@ -100,17 +99,17 @@ class MyEl extends Component {
       
       <h1 class="${this.username} arbitrary">Things ${this.username} needs to do</h1>
 
-      <form (submit)="this.addTodo">
+      <form (submit)="${this.addTodo}">
         <fieldset>
           <legend>Create a to-do</legend>
 
           <label for="title">To-do title</label>
-          <input id="title" name="title" type="text" ref="todoTitle">
+          <input id="title" name="title" type="text" ref="todoTitle" required>
 
           <button>Add to-do</button>
 
           <ul>
-            ${this.todos.filter(todo => !todo.completed).map(todo => this.fragment(todo.title)`
+            ${this.todos.map(todo => this.fragment(todo.title)`
               <to-do [title]="${todo.title}" [completed]="${todo.completed}" [todo]="${todo}" (completed)="${this.completed}"></to-do>
             `)}
           </ul>
@@ -123,11 +122,9 @@ class MyEl extends Component {
 
       <p>Quisque sit amet lorem in mauris viverra facilisis. Vestibulum pharetra elit eget eleifend tempor.</p>
 
-      <bind-to [info]="${this.username}"></bind-to>
-
       <form (submit)="${this.update}">
         <label for="username">User name</label>
-        <input id="username" type="text" name="username" (input)="this.updateName" ref="input">
+        <input id="username" type="text" name="username" (input)="${this.updateName}" ref="input">
 
         <button>Submit</button>
       </form>
@@ -163,7 +160,7 @@ class ToDo extends Component {
     this.html`
       <li class="${this.completed ? 'completed' : 'incomplete'}">
         <label>
-          <input type="checkbox" [value]="${this.todo.completed}" (change)="this.done">
+          <input type="checkbox" [value]="${this.todo.completed}" (change)="${this.done}">
           ${this.todo.title}
         </label>
       </li>

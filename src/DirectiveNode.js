@@ -1,6 +1,5 @@
-// import { templiteral } from './templiteral';
-import { Template } from './Template';
-import { removeSymbol } from './patterns';
+import { Template } from './Template.js';
+import { removeSymbol, repeaterSymbol } from './patterns.js';
 
 export class DirectiveNode {
   constructor(node, value, context, compiler, index) {
@@ -9,20 +8,34 @@ export class DirectiveNode {
     this.context = context;
     this.compiler = compiler;
     this.index = index;
-    this.templateMap = new Map();
+    this.templateMap = null;
     this.compiler.partIndicies.set(index, this);
+    this.node[repeaterSymbol] = [];
+    this.repeater = this.node[repeaterSymbol];
+    this.group = Symbol('Group');
   }
 
   init() {
-    this.templates = this.values.map(value => {
-      const $$key = value[1].$$key;
+    this.templates = this.values.map((value, index) => {
+      const [strings, values] = value;
+      const { $$key } = values;
+      if (this.templateMap === null) {
+        if (typeof $$key !== 'string' && typeof $$key !== 'number') {
+          this.templateMap = new WeakMap();
+        } else {
+          this.templateMap = new Map();
+        }
+      }
       let template;
       if (this.templateMap.has($$key)) {
         template = this.templateMap.get($$key);
+        template.update(values);
       } else {
-        template = new Template(value[0], value[1], this.node.parentNode, this.context);
+        template = new Template(strings, values, this.node, this.context, this.group, index);
         this.templateMap.set($$key, template);
       }
+      this.node[this.group].set(index, template);
+      this.repeater.push(...template.nodes);
       return template;
     });
   }
@@ -31,24 +44,21 @@ export class DirectiveNode {
     const newValues = values[this.index];
     const oldValues = this.values;
     this.values = newValues;
-    const activeKeys = new Set(this.values.map(value => value[1].$$key));
-    const previousKeys = new Set(oldValues.map(value => value[1].$$key));
+    const activeKeys = new Set(this.values.map(([, value]) => value.$$key));
+    const previousKeys = new Set(oldValues.map(([, value]) => value.$$key));
+    const newKeys = new Set();
 
-    if (activeKeys.size < previousKeys.size) {
-      activeKeys.forEach(key => previousKeys.delete(key));
-      previousKeys.forEach(key => {
-        const template = this.templateMap.get(key);
+    activeKeys.forEach(key => {
+      previousKeys.has(key) ? null : newKeys.add(key);
+    });
+
+    previousKeys.forEach(key => {
+      const template = this.templateMap.get(key);
+      if (template && !activeKeys.has(key)) {
         template[removeSymbol]();
         this.templateMap.delete(key);
-      });
-    }
-
-    if (newValues.length !== oldValues.length) {
-      this.init();
-    } else {
-      this.templates.forEach((template, index) => {
-        template.update(values[this.index][index][1]);
-      });
-    }
+      }
+    });
+    this.init();
   }
 }

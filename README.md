@@ -177,30 +177,6 @@ Loops are created using the built-in `Array` prototype methods and the use of th
 
 The fragment's `this` methods will still be referenced to the containing component.
 
-## Repeat directive (deprecated)
-
-Need to use the same template on multiple items? You can use the `<t-repeat>` element to loop over data:
-
-```html
-<t-repeat [items]="${this.todos}" [templateCallback]="${this.todoTemplateCallback}"></t-repeat>
-```
-
-In your base component, add a template callback as a method: 
-
-```javascript
-todoTemplateCallback() {
-  return (todo, index) => `
-    <li>
-      <label>
-        <input type="checkbox" [checked]="${todo.complete}">
-        <span>${todo.title}</span>
-      </label>
-    </li>`;
-}
-```
-
-Any time the template's `_render` method is called, the element will update.
-
 ## If directive
 
 To show/hide elements based on some condition, use the `<t-if>` element:

@@ -1,4 +1,4 @@
-import { templiteral } from './templiteral';
+import { templiteral } from './templiteral.js';
 
 export class TRepeat extends HTMLElement {
   constructor() {

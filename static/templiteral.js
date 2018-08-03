@@ -1,16 +1,13 @@
 const valuePattern = /---!{.*?(}!---)/gi;
-const eventPattern = /^\(.*\)$/gi;
+
 const propPattern = /^\[.*\]$/;
 
 
 
-const modelPattern = /t-model/gi;
 const matchPattern = /---!{\d+}!---/gi;
-
-const modelSymbol = Symbol('t-model');
 const removeSymbol = Symbol('RemoveTemplate');
 const rendererSymbol = Symbol('Renderer');
-
+const repeaterSymbol = Symbol('Repeater');
 const valueToInt = match => +match.replace(/(---!{)|(}!---)/gi, '');
 const toEventName = match => match.replace(/(\()|(\))/gi, '');
 
@@ -27,9 +24,10 @@ class ContentNode {
   }
 
   update(values) {
-    this.node.nodeValue = this.base.replace(matchPattern, match => 
-      values[valueToInt(match)] === null ? '' : values[valueToInt(match)]
-    );
+    this.node.nodeValue = this.base.replace(matchPattern, match => {
+      const value = values[valueToInt(match)];
+      return value === null ? '' : values[valueToInt(match)]
+    });
   }
 }
 
@@ -42,41 +40,21 @@ class AttributeNode {
     this.compiler = compiler;
     this.boundAttrs.forEach(attribute => {
       attribute.base = attribute.value;
+      attribute.bases = attribute.base.match(matchPattern) || [];
+      attribute.baseIndicies = attribute.bases.map(valueToInt);
       const indicies = attribute.base.match(valuePattern) || [];
       this.indicies = indicies.map(valueToInt);
       this.indicies.forEach(index => this.compiler.partIndicies.set(index, this));
     });
     this.eventMap = new Map();
-    this.addListeners();
   }
 
   addListener(eventName, method) {
-    this.node.addEventListener(eventName, method.bind(this.context));
-    this.eventMap.set(eventName, method);
-    !this.context.DEBUG ? this.node.removeAttribute(`(${eventName})`) : null;
-  }
-
-  addListeners() {
-    this.boundEvents.forEach((eventHandler, eventName) => {
-      if (eventName === modelSymbol) {
-        this.context[eventHandler] = this.context[eventHandler] ? this.context[eventHandler] : undefined;
-        this.node.value = this.context[eventHandler];
-        this.node.addEventListener('input', this._modelFunction(eventHandler));
-        this.node.addEventListener('change', this._modelFunction(eventHandler));
-      } else {
-        if (typeof eventHandler === 'function') {
-          this.addListener(eventName, eventHandler);
-        } else {
-          const handlerName = eventHandler.replace(/(this\.)|(\(.*\))/gi, '');
-          if (typeof this.context[handlerName] !== 'function') {
-            console.error(`Method ${handlerName} is not a method of element ${this.context.tagName}`);
-          } else {
-            const handler = this.context[handlerName].bind(this.context);
-            this.addListener(eventName, handler);
-          }
-        }
-      }
-    });
+    if (!this.eventMap.get(eventName)) {
+      this.node.addEventListener(eventName, method.bind(this.context));
+      this.eventMap.set(eventName, method);
+      !this.context.DEBUG ? this.node.removeAttribute(`(${eventName})`) : null;
+    }
   }
 
   disconnect() {
@@ -92,11 +70,6 @@ class AttributeNode {
     const attributeName = attribute.name.replace(/\[|\]/g, '');
     !this.context.DEBUG ? this.node.removeAttribute(attribute.name) : null;
     this.node[attributeName] = attributeValue;
-    if (attributeName === 'innerhtml') {
-      this.node.innerHTML = attributeValue.join('');
-      this.node.removeAttribute('innerhtml');
-      this.node.removeAttribute('innerHTML');
-    }
     if (attributeValue && (attributeValue !== 'false' && attributeValue !== 'undefined')) {
       this.node.setAttribute(attributeName, attributeValue);
     } else {
@@ -107,39 +80,82 @@ class AttributeNode {
 
   update(values) {
     this.boundAttrs.forEach(attribute => {
-      const bases = attribute.base.match(matchPattern) || [];
-      const baseIndicies = bases.map(valueToInt);
       let attributeValue = attribute.base;
       
-      for (let i = 0; i < baseIndicies.length; i += 1) {
-        const index = baseIndicies[i];
+      for (let i = 0; i < attribute.baseIndicies.length; i += 1) {
+        const index = attribute.baseIndicies[i];
         const value = values[index] || '';
         if (typeof value !== 'function') {
           attributeValue = attributeValue.replace(`---!{${index}}!---`, value);
         } else {
           this.addListener(toEventName(attribute.name), value);
+          this.boundAttrs.delete(attribute.name);
         }
       }
       
       attribute.value = attributeValue;
       if (attribute.name.match(propPattern)) {
-        if (baseIndicies.length === 1) {
-          attributeValue = values[baseIndicies[0]];
+        if (attribute.baseIndicies.length === 1) {
+          attributeValue = values[attribute.baseIndicies[0]];
         }
         this.updateProperty(attribute, attributeValue);
       }
     });
   }
-
-  _modelFunction(modelName) {
-    const { context } = this;
-    return function() {
-      context[modelName] = this.value;
-    };
-  }
 }
 
-// import { templiteral } from './templiteral';
+const deepEqual = (a, b) => {
+  if (a === b) return true;
+    
+  if (a && b && typeof a == 'object' && typeof b == 'object') {
+    const arrA = Array.isArray(a);
+    const arrB = Array.isArray(b);
+    let i;
+    let length;
+    let key;
+        
+    if (arrA && arrB) {
+      length = a.length;
+      if (length != b.length) return false;
+      for (i = length; i-- !== 0;)
+        if (!deepEqual(a[i], b[i])) return false;
+      return true;
+    }
+        
+    if (arrA != arrB) return false;
+        
+    const dateA = a instanceof Date;
+    const dateB = b instanceof Date;
+    if (dateA != dateB) return false;
+    if (dateA && dateB) return a.getTime() == b.getTime();
+        
+    const regexpA = a instanceof RegExp;
+    const regexpB = b instanceof RegExp;
+    if (regexpA != regexpB) return false;
+    if (regexpA && regexpB) return a.toString() == b.toString();
+        
+    const keys = Object.keys(a);
+    length = keys.length;
+        
+    if (length !== Object.keys(b).length) return false;
+        
+    for (i = length; i-- !== 0;)
+      if (!Object.hasOwnProperty.call(b, keys[i])) return false;
+
+    for (i = length; i-- !== 0;) {
+      key = keys[i];
+      if (!deepEqual(a[key], b[key])) return false;
+    }
+
+    return true;
+  } else if (a && b && typeof a == 'function' && typeof b == 'function') {
+    // ignore functions for our purposes
+    return true;
+  }
+    
+  return a!==a && b!==b;
+};
+
 class DirectiveNode {
   constructor(node, value, context, compiler, index) {
     this.node = node;
@@ -147,20 +163,34 @@ class DirectiveNode {
     this.context = context;
     this.compiler = compiler;
     this.index = index;
-    this.templateMap = new Map();
+    this.templateMap = null;
     this.compiler.partIndicies.set(index, this);
+    this.node[repeaterSymbol] = [];
+    this.repeater = this.node[repeaterSymbol];
+    this.group = Symbol('Group');
   }
 
   init() {
-    this.templates = this.values.map(value => {
-      const $$key = value[1].$$key;
+    this.templates = this.values.map((value, index) => {
+      const [strings, values] = value;
+      const { $$key } = values;
+      if (this.templateMap === null) {
+        if (typeof $$key !== 'string' && typeof $$key !== 'number') {
+          this.templateMap = new WeakMap();
+        } else {
+          this.templateMap = new Map();
+        }
+      }
       let template;
       if (this.templateMap.has($$key)) {
         template = this.templateMap.get($$key);
+        template.update(values);
       } else {
-        template = new Template(value[0], value[1], this.node.parentNode, this.context);
+        template = new Template(strings, values, this.node, this.context, this.group, index);
         this.templateMap.set($$key, template);
       }
+      this.node[this.group].set(index, template);
+      this.repeater.push(...template.nodes);
       return template;
     });
   }
@@ -169,35 +199,34 @@ class DirectiveNode {
     const newValues = values[this.index];
     const oldValues = this.values;
     this.values = newValues;
-    const activeKeys = new Set(this.values.map(value => value[1].$$key));
-    const previousKeys = new Set(oldValues.map(value => value[1].$$key));
+    const activeKeys = new Set(this.values.map(([, value]) => value.$$key));
+    const previousKeys = new Set(oldValues.map(([, value]) => value.$$key));
+    const newKeys = new Set();
 
-    if (activeKeys.size < previousKeys.size) {
-      activeKeys.forEach(key => previousKeys.delete(key));
-      previousKeys.forEach(key => {
-        const template = this.templateMap.get(key);
+    activeKeys.forEach(key => {
+      previousKeys.has(key) ? null : newKeys.add(key);
+    });
+
+    previousKeys.forEach(key => {
+      const template = this.templateMap.get(key);
+      if (template && !activeKeys.has(key)) {
         template[removeSymbol]();
         this.templateMap.delete(key);
-      });
-    }
-
-    if (newValues.length !== oldValues.length) {
-      this.init();
-    } else {
-      this.templates.forEach((template, index) => {
-        template.update(values[this.index][index][1]);
-      });
-    }
+      }
+    });
+    this.init();
   }
 }
 
 class Template {
-  constructor(strings, values, location, context) {
+  constructor(strings, values, location, context, group = null, index = null) {
     this.strings = strings;
     this.values = values;
     this.oldValues = values.map((value, index) => `---!{${index}}!---`);
     this.location = location;
     this.context = context;
+    this.group = group;
+    this.index = index;
     this.context.refs = this.context.refs || {};
     this.parts = [];
     this.partIndicies = new Map();
@@ -209,20 +238,29 @@ class Template {
   }
 
   _append(node) {
-    for (let i = 0; i < this.parts.length; i += 1) {
-      const part = this.parts[i];
-      if (part instanceof AttributeNode || part instanceof ContentNode) {
-        part.update(this.values, this.oldValues);
-      } else if (part instanceof DirectiveNode) {
-        part.init();
-      }
-    }
-    const symbol = this.templateSymbol;
     this.nodes = Array.from(node.children).map(child => {
-      child[symbol] = true;
+      child[this.templateSymbol] = this;
       return child;
     });
-    this.location.appendChild(node);
+
+    if (this.location instanceof Comment) {
+      if (this.group) {
+        this.location[this.group] = this.location[this.group] || new Map();
+        let group = this.location[this.group];
+        this.location[this.group].set(this.index, this);
+        if (this.index === 0) {
+          this.location.after(node);
+        } else {
+          let appendIndex = this.index - 1;
+          while (!group.get(appendIndex)) {
+            appendIndex -= 1;
+          }
+          group.get(appendIndex).nodes[group.get(this.index - 1).nodes.length - 1].after(node);
+        }
+      }
+    } else {
+      this.location.appendChild(node);
+    }
 
     if (!this.context[rendererSymbol]) {
       Object.defineProperty(this, rendererSymbol, {
@@ -261,59 +299,45 @@ class Template {
   _walk(walker, parts) {
     while (walker.nextNode()) {
       const { currentNode } = walker;
-      if (!currentNode.__templiteralCompiler) {
-        switch (currentNode.nodeType) {
-        case 1: {
-          const { attributes } = currentNode;
-          if (attributes.length) {
-            const boundAttrs = new Map();
-            const boundEvents = new Map();
-            for (let i = 0; i < attributes.length; i += 1) {
-              const attribute = attributes[i];
-              if (attribute.value.match(valuePattern) || attribute.name.match(propPattern)) {
-                boundAttrs.set(attribute.name, attribute);
-              } else if (attribute.name.match(eventPattern)) {
-                if (!attribute.value.match(valuePattern)) {
-                  const eventName = attribute.name.substring(1, attribute.name.length - 1);
-                  boundEvents.set(eventName, attribute.value);
-                  this.eventHandlers.push({ eventName, currentNode });
-                } else if (attribute.value.match(valuePattern)) {
-                  const eventName = attribute.name.substring(1, attribute.name.length - 1);
-                  const handler = this.values[valueToInt(attribute.value)];
-                  boundEvents.set(eventName, handler);
-                  this.eventHandlers.push({ eventName, currentNode });
-                }
-              } else if (attribute.name.match(modelPattern)) {
-                boundEvents.set(modelSymbol, attribute.value);
-              } else if (attribute.name.match('ref')) {
-                this.context.refs[attribute.value] = currentNode;
-              }
-            }
-            if (boundAttrs.size >= 1 || boundEvents.size >= 1) {
-              const attrNode = new AttributeNode(currentNode, boundAttrs, boundEvents, this.context, this);
-              parts.push(attrNode);
+      switch (currentNode.nodeType) {
+      case 1: {
+        const { attributes } = currentNode;
+        if (attributes.length) {
+          const boundAttrs = new Map();
+          const boundEvents = new Map();
+          for (let i = 0; i < attributes.length; i += 1) {
+            const attribute = attributes[i];
+            if (attribute.value.match(valuePattern) || attribute.name.match(propPattern)) {
+              boundAttrs.set(attribute.name, attribute);
+            } else if (attribute.name.match('ref')) {
+              this.context.refs[attribute.value] = currentNode;
             }
           }
-          break;
-        }
-        case 3: {
-          if (currentNode.textContent && currentNode.textContent.match(valuePattern)) {
-            const contentNode = new ContentNode(currentNode, this);
-            parts.push(contentNode);
+          if (boundAttrs.size >= 1 || boundEvents.size >= 1) {
+            const attrNode = new AttributeNode(currentNode, boundAttrs, boundEvents, this.context, this);
+            parts.push(attrNode);
+            attrNode.update(this.values, this.oldValues);
           }
-          break;
         }
-        case 8: {
-          const valuesPart = valueToInt(currentNode.nodeValue);
-          const initial = this.values[valuesPart];
-          const value = this.values[valuesPart];
-          const directiveNode = new DirectiveNode(currentNode, value, this.context, this, valuesPart, initial);
-          parts.push(directiveNode);
-          break;
+        break;
+      }
+      case 3: {
+        if (currentNode.textContent && currentNode.textContent.match(valuePattern)) {
+          const contentNode = new ContentNode(currentNode, this);
+          parts.push(contentNode);
+          contentNode.update(this.values, this.oldValues);
         }
-        }
-      } else {
-        this.templiteralParts.add(currentNode);
+        break;
+      }
+      case 8: {
+        const valuesPart = valueToInt(currentNode.nodeValue);
+        const initial = this.values[valuesPart];
+        const value = this.values[valuesPart];
+        const directiveNode = new DirectiveNode(currentNode, value, this.context, this, valuesPart, initial);
+        parts.push(directiveNode);
+        directiveNode.init(this.values[parts.length - 1]);
+        break;
+      }
       }
     }
   }
@@ -321,42 +345,19 @@ class Template {
   update(values) {
     this.oldValues = this.values;
     this.values = values;
-
-    for (let i = 0; i < values.length; i += 1) {
-      if (values[i] !== this.oldValues[i]) {
-        window.requestAnimationFrame(() => 
-          this.partIndicies.get(i).update(values)
-        );
-      }
+    
+    for (let i = 0; i < values.length; i += 1 ) {
+      !deepEqual(values[i], this.oldValues[i]) && 
+        window.requestAnimationFrame(() => this.partIndicies.get(i).update(values));
     }
   }
 
   [removeSymbol]() {
-    this.nodes.forEach(templateChild => this.location.removeChild(templateChild));
+    this.nodes.forEach(templateChild => templateChild.parentNode.removeChild(templateChild));
     this.parts
       .filter(part => part instanceof AttributeNode)
       .forEach(part => part.disconnect());
   }
-}
-
-class TRepeat extends HTMLElement {
-  constructor() {
-    super();
-    this.templiteral = templiteral;
-  }
-
-  connectedCallback() {
-    console.warn('t-repeat is being deprecated in favor of inline array methods.');
-    this._render();
-  }
-
-  _render() {
-    this.templiteral()(this.items.map(this.templatecallback()));
-  }
-}
-
-if (!customElements.get('t-repeat')) {
-  customElements.define('t-repeat', TRepeat);
 }
 
 class TIf extends HTMLElement {  
@@ -423,26 +424,45 @@ function fragment(key) {
 }
 
 class Component extends HTMLElement {
-  static get boundAttributes() {
-    return [];
-  }
-
-  static get boundProps() {
-    return [];
-  }
+  static get boundAttributes() { return []; }
+  static get observedAttributes() { return [...this.boundAttributes]; }
+  static get renderer() { return 'render'; }
   
-  static get observedAttributes() {
-    return [...this.boundAttributes];
-  }
-
-  static get renderer() {
-    return 'render';
-  }
-  
-  constructor() {
+  constructor(state = {}) {
     super();
     const self = this;
     const attrs = new Set();
+    const stateProxy = watch(state, (target, property, descriptor) => {
+      try {
+        if (this.constructor.boundAttributes.includes(property)) {
+          if (descriptor.value === false || descriptor.value === null) {
+            this.removeAttribute(property);
+          } else {
+            this.setAttribute(property, descriptor.value);
+          }
+        }
+        this[this.constructor.renderer].bind(this)();
+      } catch (err) {
+        console.log(err);
+      }
+    });
+
+    Object.defineProperty(this, 'state', {
+      get() {
+        return stateProxy;
+      },
+      set(_state) {
+        Object.keys(_state).forEach(key => {
+          if (typeof _state[key] !== 'string' || typeof _state[key] !== 'number') {
+            state[key] = _state[key];
+          } else {
+            state[key] = watch(_state[key], () => this[this.constructor.renderer]());
+          }
+        });
+        return true;
+      }
+    });
+
     this.constructor.boundAttributes.map((attr, index, currentArray) => {
       Object.defineProperty(this, attr, {
         get() {
@@ -473,11 +493,7 @@ class Component extends HTMLElement {
     
     Object.defineProperty(this, 'html', {
       get() {
-        return (...args) => {
-          return new Promise(resolve => 
-            window.requestAnimationFrame(() => resolve(Reflect.apply(self.templiteral, self, args)))
-          );
-        };
+        return (...args) => Reflect.apply(self.templiteral, self, args);
       },
       configurable: false,
       enumerable: false
@@ -493,49 +509,49 @@ class Component extends HTMLElement {
 
   attributeChangedCallback(name, oldValue, newValue) {
     if (oldValue !== newValue) {
-      this[name] = newValue;
+      this.state[name] = newValue;
     } else if (newValue === '' && this.hasAttribute(name)) {
-      this[name] = true;
+      this.state[name] = true;
     }
+    this.emit('ComponentRender', {
+      component: this,
+      time: Date.now(),
+    });
+  }
+
+  get $$renderListener() {
+    return debounce(this[this.constructor.renderer].bind(this), 100, true);
   }
   
   connectedCallback() {
     if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function') {
       this[this.constructor.renderer]();
 
-      this.addEventListener('ComponentRender', () => {
-        setTimeout(this[this.constructor.renderer].bind(this), 0);
-      });
+      if (!this.$$listening) {
+        this.addEventListener('ComponentRender', this.$$renderListener);
+      } else {
+        console.log(this, this.$$listening, !this.$$listening );
+      }
     }
-
-    if (this[this.constructor.renderer] && this.constructor.boundProps.length) {
-      this.constructor.boundProps.map(prop => {
-        this[prop] = watch(this[prop], () => {
-          const renderEvent = new CustomEvent('ComponentRender', {
-            bubbles: true,
-            composed: true,
-            detail: {
-              component: this,
-              time: Date.now(),
-            }
-          });
-          this.dispatchEvent(renderEvent);
-          return this[this.constructor.renderer].bind(this);
-        });
-      });
-    }
+    
+    this.$$listening = true;
   }
   
   disconnectedCallback() {
     templateCache.delete(this);
     if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function') {
-      this.removeEventListener('ComponentRender', this[this.constructor.renderer]);
+      this.removeEventListener('ComponentRender', this.$$renderListener);
+      this.$$listening = false;
     }
     this[rendererSymbol] && this[rendererSymbol][removeSymbol]();
   }
 
   emit(eventName, detail) {
-    this.dispatchEvent(new CustomEvent(eventName, { detail }));
+    this.dispatchEvent(new CustomEvent(eventName, { 
+      bubbles: true,
+      composed: true,
+      detail 
+    }));
   }
 }
 
@@ -556,16 +572,39 @@ const watch = (object, onChange) => {
       }
     },
     defineProperty(target, property, descriptor) {
-      onChange();
-      return Reflect.defineProperty(target, property, descriptor);
+      const define = Reflect.defineProperty(target, property, descriptor);
+      onChange(target, property, descriptor);
+      return define;
     },
-    deleteProperty(target, property) {
-      onChange();
-      return Reflect.deleteProperty(target, property);
+    deleteProperty(target, property, descriptor) {
+      const deleted = Reflect.deleteProperty(target, property);
+      onChange(target, property, descriptor);
+      return deleted;
     }
   };
 
   return new Proxy(object, handler);
 };
 
-export { templiteral, fragment, Component, watch };
+const debounce = (fn, wait, immediate) => {
+  let timeout;
+
+  return function executed(...args) {
+    const context = this;
+    
+    const later = () => {
+      timeout = null;
+      !immediate && Reflect.apply(fn, context, args);
+    };
+
+    const callNow = immediate && !timeout;
+
+    clearTimeout(timeout);
+
+    timeout = setTimeout(later, wait);
+
+    callNow && Reflect.apply(fn, context, args);
+  };
+};
+
+export { templiteral, fragment, Component, watch, debounce };

@@ -8,19 +8,34 @@ module.exports = config => {
 
     frameworks: ['jasmine'],
 
-    reporters: ['progress', 'coverage-istanbul'],
+    reporters: ['coverage', 'progress'],
 
     files: [
+      './src/templiteral.js',
       { pattern: 'test/*.test.js', watched: false }
     ],
 
     preprocessors: {
+      'src/**/*.js': ['rollup', 'coverage'],
       'test/*.test.js': ['rollup']
     },
 
+    coverageReporter: {
+      type : 'html',
+      dir : 'coverage/'
+    },
+
+    coverageIstanbulReporter: {
+      reports: ['html', 'text-summary']
+    },
+
     rollupPreprocessor: {
-			format: 'es',
-			sourcemap: 'inline'
-		}
+      format: 'iife',
+      name: 'templit',
+      output: {
+        format: 'es',
+        name: 'templit'
+      }
+    }
   });
 };

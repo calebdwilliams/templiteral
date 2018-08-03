@@ -1,40 +1,51 @@
-import { ContentNode } from './ContentNode';
-import { AttributeNode } from './AttributeNode';
-import { valuePattern, eventPattern, propPattern, modelPattern, modelSymbol, valueToInt, removeSymbol, rendererSymbol } from './patterns';
-import { DirectiveNode } from './DirectiveNode';
+import { ContentNode } from './ContentNode.js';
+import { AttributeNode } from './AttributeNode.js';
+import { valuePattern, propPattern, valueToInt, removeSymbol, rendererSymbol } from './patterns.js';
+import { deepEqual } from './utilities.js';
+import { DirectiveNode } from './DirectiveNode.js';
 
 export class Template {
-  constructor(strings, values, location, context) {
+  constructor(strings, values, location, context, group = null, index = null) {
     this.strings = strings;
     this.values = values;
     this.oldValues = values.map((value, index) => `---!{${index}}!---`);
     this.location = location;
     this.context = context;
+    this.group = group;
+    this.index = index;
     this.context.refs = this.context.refs || {};
     this.parts = [];
     this.partIndicies = new Map();
     this.context.$el = location;
     this.templateSymbol = Symbol('Template');
-    this.eventHandlers = [];
     this.nodes = [];
     this._init();
   }
 
   _append(node) {
-    for (let i = 0; i < this.parts.length; i += 1) {
-      const part = this.parts[i];
-      if (part instanceof AttributeNode || part instanceof ContentNode) {
-        part.update(this.values, this.oldValues);
-      } else if (part instanceof DirectiveNode) {
-        part.init();
-      }
-    }
-    const symbol = this.templateSymbol;
     this.nodes = Array.from(node.children).map(child => {
-      child[symbol] = true;
+      child[this.templateSymbol] = this;
       return child;
     });
-    this.location.appendChild(node);
+
+    if (this.location instanceof Comment) {
+      if (this.group) {
+        this.location[this.group] = this.location[this.group] || new Map();
+        let group = this.location[this.group];
+        this.location[this.group].set(this.index, this);
+        if (this.index === 0) {
+          this.location.after(node);
+        } else {
+          let appendIndex = this.index - 1;
+          while (!group.get(appendIndex)) {
+            appendIndex -= 1;
+          }
+          group.get(appendIndex).nodes[group.get(this.index - 1).nodes.length - 1].after(node);
+        }
+      }
+    } else {
+      this.location.appendChild(node);
+    }
 
     if (!this.context[rendererSymbol]) {
       Object.defineProperty(this, rendererSymbol, {
@@ -73,59 +84,45 @@ export class Template {
   _walk(walker, parts) {
     while (walker.nextNode()) {
       const { currentNode } = walker;
-      if (!currentNode.__templiteralCompiler) {
-        switch (currentNode.nodeType) {
-        case 1: {
-          const { attributes } = currentNode;
-          if (attributes.length) {
-            const boundAttrs = new Map();
-            const boundEvents = new Map();
-            for (let i = 0; i < attributes.length; i += 1) {
-              const attribute = attributes[i];
-              if (attribute.value.match(valuePattern) || attribute.name.match(propPattern)) {
-                boundAttrs.set(attribute.name, attribute);
-              } else if (attribute.name.match(eventPattern)) {
-                if (!attribute.value.match(valuePattern)) {
-                  const eventName = attribute.name.substring(1, attribute.name.length - 1);
-                  boundEvents.set(eventName, attribute.value);
-                  this.eventHandlers.push({ eventName, currentNode });
-                } else if (attribute.value.match(valuePattern)) {
-                  const eventName = attribute.name.substring(1, attribute.name.length - 1);
-                  const handler = this.values[valueToInt(attribute.value)];
-                  boundEvents.set(eventName, handler);
-                  this.eventHandlers.push({ eventName, currentNode });
-                }
-              } else if (attribute.name.match(modelPattern)) {
-                boundEvents.set(modelSymbol, attribute.value);
-              } else if (attribute.name.match('ref')) {
-                this.context.refs[attribute.value] = currentNode;
-              }
-            }
-            if (boundAttrs.size >= 1 || boundEvents.size >= 1) {
-              const attrNode = new AttributeNode(currentNode, boundAttrs, boundEvents, this.context, this);
-              parts.push(attrNode);
+      switch (currentNode.nodeType) {
+      case 1: {
+        const { attributes } = currentNode;
+        if (attributes.length) {
+          const boundAttrs = new Map();
+          const boundEvents = new Map();
+          for (let i = 0; i < attributes.length; i += 1) {
+            const attribute = attributes[i];
+            if (attribute.value.match(valuePattern) || attribute.name.match(propPattern)) {
+              boundAttrs.set(attribute.name, attribute);
+            } else if (attribute.name.match('ref')) {
+              this.context.refs[attribute.value] = currentNode;
             }
           }
-          break;
-        }
-        case 3: {
-          if (currentNode.textContent && currentNode.textContent.match(valuePattern)) {
-            const contentNode = new ContentNode(currentNode, this);
-            parts.push(contentNode);
+          if (boundAttrs.size >= 1 || boundEvents.size >= 1) {
+            const attrNode = new AttributeNode(currentNode, boundAttrs, boundEvents, this.context, this);
+            parts.push(attrNode);
+            attrNode.update(this.values, this.oldValues);
           }
-          break;
         }
-        case 8: {
-          const valuesPart = valueToInt(currentNode.nodeValue);
-          const initial = this.values[valuesPart];
-          const value = this.values[valuesPart];
-          const directiveNode = new DirectiveNode(currentNode, value, this.context, this, valuesPart, initial);
-          parts.push(directiveNode);
-          break;
+        break;
+      }
+      case 3: {
+        if (currentNode.textContent && currentNode.textContent.match(valuePattern)) {
+          const contentNode = new ContentNode(currentNode, this);
+          parts.push(contentNode);
+          contentNode.update(this.values, this.oldValues);
         }
-        }
-      } else {
-        this.templiteralParts.add(currentNode);
+        break;
+      }
+      case 8: {
+        const valuesPart = valueToInt(currentNode.nodeValue);
+        const initial = this.values[valuesPart];
+        const value = this.values[valuesPart];
+        const directiveNode = new DirectiveNode(currentNode, value, this.context, this, valuesPart, initial);
+        parts.push(directiveNode);
+        directiveNode.init(this.values[parts.length - 1]);
+        break;
+      }
       }
     }
   }
@@ -133,18 +130,15 @@ export class Template {
   update(values) {
     this.oldValues = this.values;
     this.values = values;
-
-    for (let i = 0; i < values.length; i += 1) {
-      if (values[i] !== this.oldValues[i]) {
-        window.requestAnimationFrame(() => 
-          this.partIndicies.get(i).update(values)
-        );
-      }
+    
+    for (let i = 0; i < values.length; i += 1 ) {
+      !deepEqual(values[i], this.oldValues[i]) && 
+        window.requestAnimationFrame(() => this.partIndicies.get(i).update(values));
     }
   }
 
   [removeSymbol]() {
-    this.nodes.forEach(templateChild => this.location.removeChild(templateChild));
+    this.nodes.forEach(templateChild => templateChild.parentNode.removeChild(templateChild));
     this.parts
       .filter(part => part instanceof AttributeNode)
       .forEach(part => part.disconnect());

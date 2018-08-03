@@ -1,0 +1,37 @@
+<!doctype HTML>
+<html lang="en">
+<head>
+  <title>Templiteral Todo MVC</title>
+  <script src="todo-mvc-base.js" type="module" rel="preload"></script>
+  <style>
+      * { box-sizing: border-box; }
+      body {
+        font: 14px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        line-height: 1.4rem;
+        background: #f5f5f5;
+        color: #4d4d4d;
+        min-width: 230px;
+        max-width: 550px;
+        margin: 0 auto;
+        -webkit-font-smoothing: antialiased;
+        -moz-font-smoothing: antialiased;
+        font-smoothing: antialiased;
+        font-weight: 300;
+      }
+      h1 {
+        font-size: 100px;
+        font-weight: 100;
+        text-align: center;
+        color: rgba(175, 47, 47, 0.15);
+      }
+  </style>
+</head>
+<body>
+    <header>
+      <h1>todos</h1>
+    </header>
+    <main>
+      <todo-mvc filter="all"></todo-mvc>
+    </main>
+</body>
+</html>

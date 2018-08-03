@@ -1,113 +1,46 @@
-import { templiteral } from '../dist/templiteral.es';
 
 let myEl;
+let elClass;
+let spy;
 
-describe('templit', () => {
+// This necessarily takes time,
+// no need to factor that in to tests
+window.requestAnimationFrame = callback => callback();
+
+describe('templiteral', () => {
   beforeEach(() => {
     class MyEl extends HTMLElement {
-      static get tagName() { return 'my-el'; }
-      static get boundAttributes() { return ['who']; }
-      static get observedAttributes() {
-        return ['test', ...this.boundAttributes];
-      }
-
-      attributeChangedCallback(name) {
-        if (this.constructor.boundAttributes.includes(name)) {
-          this.render();
-        }
-      }
-
       constructor() {
         super();
-        this._shadowRoot = this.attachShadow({ mode: 'open' });
-        this.templiteral = templiteral;
-        this.pContentEditable = false;
+        this.html = templit.templiteral(this, this);
+        this.helloWho = 'world';
+        this.isDisabled = false;
       }
-
+      
+      onInit() {
+        this.init = true;
+      }
+      
       connectedCallback() {
-        this.who = 'Caleb';
         this.render();
       }
-
-      get buttonMessage() {
-        return this.who === 'Caleb' ? 'Set who to Caleb' : 'Set who to world';
+      
+      changeHelloWho() {
+        this.helloWho = 'Caleb';
+        this.render();
       }
-
-      get who() {
-        return this.getAttribute('who');
-      }
-
-      set who(_who) {
-        _who ? this.setAttribute('who', _who) : this.removeAttribute('who');
-      }
-
-      toggleContentEditable(who) {
-        console.log(who)
-        this.pContentEditable = !this.pContentEditable;
-      }
-
-      toggleWho(event, who) {
-        event.preventDefault();
-        console.log({who});
-        if (this.who === 'Caleb') {
-          this.who = 'world';
-        } else {
-          this.who = 'Caleb';
-        }
-      }
-
-      update(event) {
-        event.preventDefault();
-        this.who = this.refs.value;
-      }
-
-      updateName() {
-        this.who = this.refs.value;
-      }
-
+      
       render() {
-        this.templiteral()`
-          <style>
-            .Caleb {
-              color: tomato;
-            }
-            .Leland {
-              color: rebeccapurple;
-            }
-            .world {
-              color: mediumaquamarine;
-            }
-            [contenteditable] {
-              border: 1px dotted #1a1a1a;
-              border-right: 5px solid #bada55;
-              padding: 5px;
-              transition: all 0.2s ease;
-            }
-          </style>
-          <h1 class="heading" role="header">Hello ${this.who}</h1>
-          <div class="${this.who} arbitrary">
-            <h2>Test</h2>
-          </div>
-          <p [contentEditable]="${this.pContentEditable}">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean sapien magna, aliquet non massa dapibus, convallis porta sem. Phasellus laoreet, turpis et feugiat malesuada, quam magna tincidunt diam, at tempor sapien nisl nec elit. Curabitur suscipit mi eu dolor tempor luctus eu vel tortor.</p>
-
-          <p>Vivamus efficitur nulla nec nulla faucibus ultricies. Sed sed lacus vel nisl mattis aliquet quis rhoncus magna. Etiam aliquam eget leo nec tincidunt. Maecenas lacinia consectetur augue, vitae euismod augue eleifend quis. Mauris et aliquam velit.</p>
-
-          <p>Quisque sit amet lorem in mauris viverra facilisis. Vestibulum pharetra elit eget eleifend tempor.</p>
-
-          <form (submit)="this.update(event)">
-            <label for="name">Name</name>
-            <input id="name" type="text" name="name" (input)="this.updateName()">
-
-            <button>Submit</button>
-          </form>
-
-          <button id="toggleWho">${this.buttonMessage}</button>
-          <button (click)="this.toggleContentEditable(this.who)" id="toggleContentEditable">Toggle content editable</button>
-
+        this._ = this.html`
+          <h1>Hello ${this.helloWho}</h1>
+          <p class="${this.helloWho}">This is a paragraph</p>
+          <button ref="button" (click)="${this.changeHelloWho}" [disabled]="${this.isDisabled}">Change hello who</button>
         `;
       }
     }
-
+    elClass = MyEl;
+    spyOn(elClass.prototype, 'onInit');
+    spy = eventName => spyOn(MyEl.prototype, eventName);
     if (!customElements.get('my-el')) {
       customElements.define('my-el', MyEl);
     }
@@ -121,36 +54,60 @@ describe('templit', () => {
   });
 
   afterEach(function() {
-    myEl.who = 'Caleb';
-  });
-
-  it('should create a custom element instance', () => expect(myEl).toBeDefined());
-
-  it('should set the h1 text to Caleb', () => {
-    expect(myEl._shadowRoot.querySelector('h1').textContent).toBe('Hello Caleb');
-    expect(myEl._shadowRoot.querySelector('.arbitrary').classList.contains('Caleb')).toBe(true);
-  });
-
-  it('should automatically update the bindings when the render method is called', () => {
-    expect(myEl._shadowRoot.querySelector('h1').textContent).toBe('Hello Caleb');
-    expect(myEl._shadowRoot.querySelector('.arbitrary').classList.contains('Caleb')).toBe(true);
     myEl.who = 'world';
-    expect(myEl._shadowRoot.querySelector('h1').textContent).toBe('Hello world');
-    expect(myEl._shadowRoot.querySelector('.arbitrary').classList.contains('world')).toBe(true);
+    myEl.render();
   });
 
-  it('should trigger events', () => {
-    spyOn(myEl, 'toggleWho');
-    const clickEvent = new Event('click');
-    myEl._shadowRoot.getElementById('toggleWho').dispatchEvent(clickEvent);
-    expect(myEl.toggleWho).toHaveBeenCalled();
+  /** Tests */
+  it('should create a custom element instance', () => expect(myEl).toBeDefined());
+  it('should render content', () => expect(myEl.querySelector('h1')).toBeDefined());
+
+  /** ContentNode */
+  describe('ContentNode', () => {
+    it('should interpolate content based on the element\'s data', () => 
+      expect(myEl.querySelector('h1').textContent).toBe(`Hello ${myEl.helloWho}`)
+    );
+
+    it('should update interpolations on repeat calls to the templiteral function', () => {
+      expect(myEl.querySelector('h1').textContent).toBe(`Hello ${myEl.helloWho}`);
+      myEl.helloWho = 'Caleb';
+      myEl.render();
+      expect(myEl.querySelector('h1').textContent).toBe(`Hello ${myEl.helloWho}`);
+    });
+  });
+  
+
+  /** AttributeNode */
+  describe('AttributeNode', () => {
+    let reference; 
+    let button; 
+    beforeEach(() => {
+      reference = myEl.querySelector('p').classList[0];
+      button = myEl.querySelector('button');
+    });
+
+    it('should interpolate attributes based on the element\'s data', () => expect(myEl.querySelector('p').classList[0]).toBe(myEl.helloWho));
+    it('should update interpolations on repeat calls to the templiteral function', () => {
+      expect(reference).toBe(myEl.helloWho);
+      myEl.helloWho = 'Caleb';
+      myEl.render();
+      expect(reference).toBe(myEl.helloWho);
+    });
+    it('should add event listeners', () => {
+      spy('changeHelloWho');
+      button.dispatchEvent(new Event('click'));
+      expect(myEl.helloWho).toBe('Caleb');
+    });
+    it('should toggle properties', () => {
+      expect(button.disabled).toBe(false);
+      myEl.isDisabled = true;
+      myEl.render();
+      expect(button.disabled).toBe(true);
+    });
+    it('should define refs', () => {
+      expect(myEl.refs.button).toBeDefined();
+    });
   });
 
-  it('should manage property bindings', () => {
-    const firstParagraph = myEl._shadowRoot.querySelector('p');
-    expect(firstParagraph.hasAttribute('contenteditable')).toBe(false);
-    expect(firstParagraph.hasAttribute('[contenteditable]')).toBe(true);
-    myEl.toggleContentEditable();
-    expect(firstParagraph.hasAttribute('contenteditable')).toBe(true);
-  });
+  
 });
