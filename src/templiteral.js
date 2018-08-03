@@ -185,6 +185,11 @@ export const watch = (object, onChange) => {
         return Reflect.get(target, property, receiver);
       }
     },
+    set(target, property, value) {
+      target[property] = value;
+      onChange(target, property, { value });
+      return true;
+    },
     defineProperty(target, property, descriptor) {
       const define = Reflect.defineProperty(target, property, descriptor);
       onChange(target, property, descriptor);
