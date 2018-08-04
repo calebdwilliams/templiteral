@@ -232,7 +232,6 @@ class Template {
     this.partIndicies = new Map();
     this.context.$el = location;
     this.templateSymbol = Symbol('Template');
-    this.eventHandlers = [];
     this.nodes = [];
     this._init();
   }
@@ -570,6 +569,11 @@ const watch = (object, onChange) => {
       } catch (err) {
         return Reflect.get(target, property, receiver);
       }
+    },
+    set(target, property, value) {
+      target[property] = value;
+      onChange(target, property, { value });
+      return true;
     },
     defineProperty(target, property, descriptor) {
       const define = Reflect.defineProperty(target, property, descriptor);
