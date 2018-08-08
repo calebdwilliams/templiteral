@@ -522,7 +522,7 @@ class Component extends HTMLElement {
   }
 
   get $$renderListener() {
-    return debounce(this[this.constructor.renderer].bind(this), 100, true);
+    return debounce(this[this.constructor.renderer].bind(this), 0, true);
   }
   
   connectedCallback() {
@@ -568,6 +568,9 @@ const watch = (object, onChange) => {
       }
 
       try {
+        if (typeof target[property] === 'function' && target instanceof Date) {
+          return new Proxy(target[property].bind(target), handler);
+        }
         return new Proxy(target[property], handler);
       } catch (err) {
         return Reflect.get(target, property, receiver);
