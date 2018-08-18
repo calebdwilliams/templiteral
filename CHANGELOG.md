@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.1.0"></a>
+# [3.1.0](https://github.com/calebdwilliams/templiteral/compare/v3.0.5...v3.1.0) (2018-08-18)
+
+
+### Features
+
+* **watch:** Added support for Date, Map and WeakMap. Fix for [#5](https://github.com/calebdwilliams/templiteral/issues/5). ([cfa9919](https://github.com/calebdwilliams/templiteral/commit/cfa9919))
+
+
+
 <a name="3.0.5"></a>
 ## [3.0.5](https://github.com/calebdwilliams/templiteral/compare/v3.0.4...v3.0.5) (2018-08-08)
 
