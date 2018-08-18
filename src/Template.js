@@ -59,8 +59,8 @@ export class Template {
     }
   }
 
-  _init() {
-    const _base = this.strings.map((string, index) => {
+  _createBase() {
+    return this.strings.map((string, index) => {
       const value = this.values[index];
       const interpolationValue = `---!{${index}}!---`;
       let output = '';
@@ -72,10 +72,17 @@ export class Template {
       }
       return output;
     }).join('');
-    const fragment = document.createElement('template');
-    fragment.innerHTML = _base;
-    const baseNode = document.importNode(fragment.content, true);
+  }
 
+  _createNode(baseText) {
+    const fragment = document.createElement('template');
+    fragment.innerHTML = baseText;
+    return document.importNode(fragment.content, true);
+  }
+
+  _init() {
+    const base = this._createBase();
+    const baseNode = this._createNode(base);
     const walker = document.createTreeWalker(baseNode, 133, null, false);
     this._walk(walker, this.parts, true);
     this._append(baseNode);
@@ -139,8 +146,14 @@ export class Template {
 
   [removeSymbol]() {
     this.nodes.forEach(templateChild => templateChild.parentNode.removeChild(templateChild));
+    this.nodes = null;
     this.parts
       .filter(part => part instanceof AttributeNode)
       .forEach(part => part.disconnect());
+    this.parts = null;
+    this.partIndicies = null;
+    this.context = null;
+    this.location = null;
+    this.group = null;
   }
 }

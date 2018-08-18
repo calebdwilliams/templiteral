@@ -134,7 +134,7 @@ export class Component extends HTMLElement {
   }
 
   get $$renderListener() {
-    return debounce(this[this.constructor.renderer].bind(this), 0, true);
+    return this[this.constructor.renderer];
   }
   
   connectedCallback() {
@@ -143,8 +143,6 @@ export class Component extends HTMLElement {
 
       if (!this.$$listening) {
         this.addEventListener('ComponentRender', this.$$renderListener);
-      } else {
-        console.log(this, this.$$listening, !this.$$listening )
       }
     }
     
@@ -158,6 +156,9 @@ export class Component extends HTMLElement {
       this.$$listening = false;
     }
     this[rendererSymbol] && this[rendererSymbol][removeSymbol]();
+    if (this.onDestroy && typeof this.onDestroy === 'function') {
+      this.onDestroy();
+    }
   }
 
   emit(eventName, detail) {
@@ -175,12 +176,12 @@ export const watch = (object, onChange) => {
       const desc = Object.getOwnPropertyDescriptor(target, property);
       const value = Reflect.get(target, property, receiver);
 
-      if (desc && !desc.writable && !desc.configurable && property !== 'push') {
+      if (desc && !desc.writable && !desc.configurable) {
         return value;
       }
 
       try {
-        if (typeof target[property] === 'function' && target instanceof Date) {
+        if (typeof target[property] === 'function' && (target instanceof Date || target instanceof Map ||target instanceof WeakMap)) {
           return new Proxy(target[property].bind(target), handler);
         }
         return new Proxy(target[property], handler);

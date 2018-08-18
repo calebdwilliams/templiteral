@@ -11,6 +11,7 @@ export class AttributeNode {
       attribute.base = attribute.value;
       attribute.bases = attribute.base.match(matchPattern) || [];
       attribute.baseIndicies = attribute.bases.map(valueToInt);
+      attribute.cleanName  = attribute.name.replace(/\[|\]/g, '');
       const indicies = attribute.base.match(valuePattern) || [];
       this.indicies = indicies.map(valueToInt);
       this.indicies.forEach(index => this.compiler.partIndicies.set(index, this));
@@ -36,7 +37,7 @@ export class AttributeNode {
   }
 
   updateProperty(attribute, attributeValue) {
-    const attributeName = attribute.name.replace(/\[|\]/g, '');
+    const attributeName = attribute.cleanName;
     !this.context.DEBUG ? this.node.removeAttribute(attribute.name) : null;
     this.node[attributeName] = attributeValue;
     if (attributeValue && (attributeValue !== 'false' && attributeValue !== 'undefined')) {

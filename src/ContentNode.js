@@ -14,8 +14,8 @@ export class ContentNode {
 
   update(values) {
     this.node.nodeValue = this.base.replace(matchPattern, match => {
-      const value = values[valueToInt(match)]
-      return value === null ? '' : values[valueToInt(match)]
+      const value = values[valueToInt(match)];
+      return value === null ? '' : values[valueToInt(match)];
     });
   }
 }

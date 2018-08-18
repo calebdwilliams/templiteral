@@ -30,7 +30,7 @@ class ContentNode {
   update(values) {
     this.node.nodeValue = this.base.replace(matchPattern, match => {
       const value = values[valueToInt(match)];
-      return value === null ? '' : values[valueToInt(match)]
+      return value === null ? '' : values[valueToInt(match)];
     });
   }
 }
@@ -46,6 +46,7 @@ class AttributeNode {
       attribute.base = attribute.value;
       attribute.bases = attribute.base.match(matchPattern) || [];
       attribute.baseIndicies = attribute.bases.map(valueToInt);
+      attribute.cleanName  = attribute.name.replace(/\[|\]/g, '');
       const indicies = attribute.base.match(valuePattern) || [];
       this.indicies = indicies.map(valueToInt);
       this.indicies.forEach(index => this.compiler.partIndicies.set(index, this));
@@ -71,7 +72,7 @@ class AttributeNode {
   }
 
   updateProperty(attribute, attributeValue) {
-    const attributeName = attribute.name.replace(/\[|\]/g, '');
+    const attributeName = attribute.cleanName;
     !this.context.DEBUG ? this.node.removeAttribute(attribute.name) : null;
     this.node[attributeName] = attributeValue;
     if (attributeValue && (attributeValue !== 'false' && attributeValue !== 'undefined')) {
@@ -277,8 +278,8 @@ class Template {
     }
   }
 
-  _init() {
-    const _base = this.strings.map((string, index) => {
+  _createBase() {
+    return this.strings.map((string, index) => {
       const value = this.values[index];
       const interpolationValue = `---!{${index}}!---`;
       let output = '';
@@ -290,10 +291,17 @@ class Template {
       }
       return output;
     }).join('');
-    const fragment = document.createElement('template');
-    fragment.innerHTML = _base;
-    const baseNode = document.importNode(fragment.content, true);
+  }
 
+  _createNode(baseText) {
+    const fragment = document.createElement('template');
+    fragment.innerHTML = baseText;
+    return document.importNode(fragment.content, true);
+  }
+
+  _init() {
+    const base = this._createBase();
+    const baseNode = this._createNode(base);
     const walker = document.createTreeWalker(baseNode, 133, null, false);
     this._walk(walker, this.parts, true);
     this._append(baseNode);
@@ -357,9 +365,15 @@ class Template {
 
   [removeSymbol]() {
     this.nodes.forEach(templateChild => templateChild.parentNode.removeChild(templateChild));
+    this.nodes = null;
     this.parts
       .filter(part => part instanceof AttributeNode)
       .forEach(part => part.disconnect());
+    this.parts = null;
+    this.partIndicies = null;
+    this.context = null;
+    this.location = null;
+    this.group = null;
   }
 }
 
@@ -523,7 +537,7 @@ class Component extends HTMLElement {
   }
 
   get $$renderListener() {
-    return debounce(this[this.constructor.renderer].bind(this), 0, true);
+    return this[this.constructor.renderer];
   }
   
   connectedCallback() {
@@ -532,8 +546,6 @@ class Component extends HTMLElement {
 
       if (!this.$$listening) {
         this.addEventListener('ComponentRender', this.$$renderListener);
-      } else {
-        console.log(this, this.$$listening, !this.$$listening );
       }
     }
     
@@ -547,6 +559,9 @@ class Component extends HTMLElement {
       this.$$listening = false;
     }
     this[rendererSymbol] && this[rendererSymbol][removeSymbol]();
+    if (this.onDestroy && typeof this.onDestroy === 'function') {
+      this.onDestroy();
+    }
   }
 
   emit(eventName, detail) {
@@ -564,12 +579,12 @@ const watch = (object, onChange) => {
       const desc = Object.getOwnPropertyDescriptor(target, property);
       const value = Reflect.get(target, property, receiver);
 
-      if (desc && !desc.writable && !desc.configurable && property !== 'push') {
+      if (desc && !desc.writable && !desc.configurable) {
         return value;
       }
 
       try {
-        if (typeof target[property] === 'function' && target instanceof Date) {
+        if (typeof target[property] === 'function' && (target instanceof Date || target instanceof Map ||target instanceof WeakMap)) {
           return new Proxy(target[property].bind(target), handler);
         }
         return new Proxy(target[property], handler);
