@@ -42,7 +42,7 @@ class AttributeNode {
       attribute.base = attribute.value;
       attribute.bases = attribute.base.match(matchPattern) || [];
       attribute.baseIndicies = attribute.bases.map(valueToInt);
-      attribute.cleanName  = attribute.name.replace(/\[|\]/g, '');
+      attribute.cleanName  = attribute.name.replace(/\[|\]/g, '') ;
       const indicies = attribute.base.match(valuePattern) || [];
       this.indicies = indicies.map(valueToInt);
       this.indicies.forEach(index => this.compiler.partIndicies.set(index, this));
@@ -355,7 +355,7 @@ class Template {
     
     for (let i = 0; i < values.length; i += 1 ) {
       !deepEqual(values[i], this.oldValues[i]) && 
-        window.requestAnimationFrame(() => this.partIndicies.get(i).update(values));
+        this.partIndicies.get(i).update(values);
     }
   }
 

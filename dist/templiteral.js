@@ -45,7 +45,7 @@ class AttributeNode {
       attribute.base = attribute.value;
       attribute.bases = attribute.base.match(matchPattern) || [];
       attribute.baseIndicies = attribute.bases.map(valueToInt);
-      attribute.cleanName  = attribute.name.replace(/\[|\]/g, '');
+      attribute.cleanName  = attribute.name.replace(/\[|\]/g, '') ;
       const indicies = attribute.base.match(valuePattern) || [];
       this.indicies = indicies.map(valueToInt);
       this.indicies.forEach(index => this.compiler.partIndicies.set(index, this));
@@ -357,8 +357,9 @@ class Template {
     this.values = values;
     
     for (let i = 0; i < values.length; i += 1 ) {
-      !deepEqual(values[i], this.oldValues[i]) && 
-        window.requestAnimationFrame(() => this.partIndicies.get(i).update(values));
+      const part = this.partIndicies.get(i);
+      part && !deepEqual(values[i], this.oldValues[i]) && 
+        part.update(values);
     }
   }
 
@@ -374,34 +375,6 @@ class Template {
     this.location = null;
     this.group = null;
   }
-}
-
-class TIf extends HTMLElement {  
-  constructor() {
-    super();
-    this.cached = [];
-  }
-  
-  connectedCallback() {
-    this.style.display = 'contents';  
-  }
-    
-  set condition(condition) {
-    if (condition === false) {
-      Array.from(this.children).map(child => {
-        this.cached.push(child);
-        this.removeChild(child);
-      });
-      this.innerHTML = '';
-    } else if (condition === true) {
-      this.cached.forEach(child => this.appendChild(child));
-      this.cached = [];
-    }
-  }
-}
-  
-if (!customElements.get('t-if')) {
-  customElements.define('t-if', TIf);
 }
 
 const templateCache = new WeakMap();
@@ -436,6 +409,18 @@ function fragment(key) {
       writable: false
     });
     return [strings, values];
+  };
+}
+
+function condition(bool) {
+  return (strings, ...values) => {
+    Object.defineProperty(values, '$$key', {
+      value: bool ? 'condition' : 'false',
+      enumerable: false,
+      configurable: false,
+      writable: false
+    });
+    return bool ? [[strings, values]] : [[[], values]];
   };
 }
 
@@ -517,6 +502,13 @@ class Component extends HTMLElement {
 
     Object.defineProperty(this, 'fragment', {
       value: fragment,
+      configurable: false,
+      enumerable: false,
+      writable: false
+    });
+
+    Object.defineProperty(this, 'if', {
+      value: condition,
       configurable: false,
       enumerable: false,
       writable: false
@@ -634,6 +626,7 @@ const debounce = (fn, wait, immediate) => {
 
 exports.templiteral = templiteral;
 exports.fragment = fragment;
+exports.condition = condition;
 exports.Component = Component;
 exports.watch = watch;
 exports.debounce = debounce;

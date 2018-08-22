@@ -1,5 +1,4 @@
-const { join } = require('path');
-
+/* eslint-env node */
 module.exports = config => {
   config.set({
     basePath: './',
@@ -36,6 +35,8 @@ module.exports = config => {
         format: 'es',
         name: 'templit'
       }
-    }
+    }, 
+
+    singleRun: true
   });
 };

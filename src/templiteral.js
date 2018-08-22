@@ -1,6 +1,5 @@
 import { Template } from './Template.js';
 import { rendererSymbol, removeSymbol } from './patterns.js';
-import './TIf.js';
 
 const templateCache = new WeakMap();
 
@@ -34,6 +33,18 @@ export function fragment(key) {
       writable: false
     });
     return [strings, values];
+  };
+}
+
+export function condition(bool) {
+  return (strings, ...values) => {
+    Object.defineProperty(values, '$$key', {
+      value: bool ? 'condition' : 'false',
+      enumerable: false,
+      configurable: false,
+      writable: false
+    });
+    return bool ? [[strings, values]] : [[[], values]];
   };
 }
 
@@ -115,6 +126,13 @@ export class Component extends HTMLElement {
 
     Object.defineProperty(this, 'fragment', {
       value: fragment,
+      configurable: false,
+      enumerable: false,
+      writable: false
+    });
+
+    Object.defineProperty(this, 'if', {
+      value: condition,
       configurable: false,
       enumerable: false,
       writable: false

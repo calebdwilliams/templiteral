@@ -14,17 +14,20 @@
     "custom element",
     "customElements",
     "Angular",
-    "React"
+    "React",
+    "component",
+    "template engine"
   ],
   "version": "3.1.0",
   "description": "",
   "main": "dist/templiteral.js",
   "module": "dist/templiteral.es.js",
   "scripts": {
-    "prebuild": "npm run clean",
+    "prebuild": "npm test && npm run clean",
     "build": "rollup -c",
     "postbuild": "uglifyjs dist/templiteral.js -o dist/templiteral.min.js -m && uglifyjs dist/templiteral.cjs.js -o dist/templiteral.cjs.min.js -m && uglifyjs dist/templiteral.umd.js -o dist/templiteral.umd.min.js -m && uglifyjs dist/templiteral.es.js -o dist/templiteral.es.min.js -m",
     "clean": "rimraf dist",
+    "prerelease": "npm run build",
     "release": "standard-version",
     "postrelease": "git push --follow-tags origin master; npm publish",
     "start": "node server.js",
@@ -50,7 +53,6 @@
     "karma-rollup-plugin": "^0.2.4",
     "karma-rollup-preprocessor": "^5.1.1",
     "rollup": "^0.50.1",
-    "rollup-plugin-uglify-es": "0.0.1",
     "standard-version": "^4.4.0",
     "uglify-es": "^3.3.10"
   },

@@ -100,6 +100,10 @@ class HelloWorld extends Component {
 
   constructor() {
     super();
+    this.state = {
+      who: this.getAttribute('who'),
+      now: new Date().toLocaleString()
+    };
     this.interval = setInterval(this.updateTime.bind(this), 100);
   }
   
@@ -177,12 +181,21 @@ Loops are created using the built-in `Array` prototype methods and the use of th
 
 The fragment's `this` methods will still be referenced to the containing component.
 
-## If directive
+## Conditional templates
 
-To show/hide elements based on some condition, use the `<t-if>` element:
+To show/hide elements based on some condition, use the condition function. When used in a `Component`, you can use the element's built-in `if` method:
 
 ```html
-<t-if [condition]="${this.showTodos}">
-  <!-- To do repeater -->
-</t-if>
+${this.if(this.showTodos)`
+  <ul>
+    ${this.todos = todo => this.fragment(todo)`
+      <li>
+        <label>
+          <input type="checkbox" (change)="${this.done}">
+          ${todo.title}
+        </label>
+      </li>
+    `}
+  </ul>
+`}
 ```

@@ -139,8 +139,9 @@ export class Template {
     this.values = values;
     
     for (let i = 0; i < values.length; i += 1 ) {
-      !deepEqual(values[i], this.oldValues[i]) && 
-        window.requestAnimationFrame(() => this.partIndicies.get(i).update(values));
+      const part = this.partIndicies.get(i);
+      part && !deepEqual(values[i], this.oldValues[i]) && 
+        part.update(values);
     }
   }
 

@@ -1,5 +1,3 @@
-// import uglify from 'rollup-plugin-uglify-es';
-
 export default {
   input: 'src/templiteral.js',
   output: [{
