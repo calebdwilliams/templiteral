@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.2.0"></a>
+# [3.2.0](https://github.com/calebdwilliams/templiteral/compare/v3.1.0...v3.2.0) (2018-08-22)
+
+
+### Features
+
+* **condition and Component.if:** Added solution for conditional templates ([511d080](https://github.com/calebdwilliams/templiteral/commit/511d080))
+
+
+
 <a name="3.1.0"></a>
 # [3.1.0](https://github.com/calebdwilliams/templiteral/compare/v3.0.5...v3.1.0) (2018-08-18)
 
