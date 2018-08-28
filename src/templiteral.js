@@ -53,8 +53,12 @@ export class Component extends HTMLElement {
   static get observedAttributes() { return [...this.boundAttributes]; }
   static get renderer() { return 'render'; }
   
-  constructor(state = {}) {
+  constructor(init) {
     super();
+    if (init) {
+      this.attachShadow(init);
+    }
+    const state = {};
     const self = this;
     const attrs = new Set();
     const stateProxy = watch(state, (target, property, descriptor) => {

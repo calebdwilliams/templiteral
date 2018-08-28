@@ -74,7 +74,7 @@ class AttributeNode {
     if (attributeValue && (attributeValue !== 'false' && attributeValue !== 'undefined')) {
       this.node.setAttribute(attributeName, attributeValue);
     } else {
-      this.node[attributeName] = false;
+      // this.node[attributeName] = false;
       this.node.removeAttribute(attributeName);
     }
   }
@@ -354,8 +354,9 @@ class Template {
     this.values = values;
     
     for (let i = 0; i < values.length; i += 1 ) {
-      !deepEqual(values[i], this.oldValues[i]) && 
-        this.partIndicies.get(i).update(values);
+      const part = this.partIndicies.get(i);
+      part && !deepEqual(values[i], this.oldValues[i]) && 
+        part.update(values);
     }
   }
 
@@ -371,34 +372,6 @@ class Template {
     this.location = null;
     this.group = null;
   }
-}
-
-class TIf extends HTMLElement {  
-  constructor() {
-    super();
-    this.cached = [];
-  }
-  
-  connectedCallback() {
-    this.style.display = 'contents';  
-  }
-    
-  set condition(condition) {
-    if (condition === false) {
-      Array.from(this.children).map(child => {
-        this.cached.push(child);
-        this.removeChild(child);
-      });
-      this.innerHTML = '';
-    } else if (condition === true) {
-      this.cached.forEach(child => this.appendChild(child));
-      this.cached = [];
-    }
-  }
-}
-  
-if (!customElements.get('t-if')) {
-  customElements.define('t-if', TIf);
 }
 
 const templateCache = new WeakMap();
@@ -433,6 +406,18 @@ function fragment(key) {
       writable: false
     });
     return [strings, values];
+  };
+}
+
+function condition(bool) {
+  return (strings, ...values) => {
+    Object.defineProperty(values, '$$key', {
+      value: bool ? 'condition' : 'false',
+      enumerable: false,
+      configurable: false,
+      writable: false
+    });
+    return bool ? [[strings, values]] : [[[], values]];
   };
 }
 
@@ -518,6 +503,13 @@ class Component extends HTMLElement {
       enumerable: false,
       writable: false
     });
+
+    Object.defineProperty(this, 'if', {
+      value: condition,
+      configurable: false,
+      enumerable: false,
+      writable: false
+    });
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -572,19 +564,21 @@ class Component extends HTMLElement {
 const watch = (object, onChange) => {
   const handler = {
     get(target, property, receiver) {
-      const desc = Object.getOwnPropertyDescriptor(target, property);
-      const value = Reflect.get(target, property, receiver);
-
-      if (desc && !desc.writable && !desc.configurable) {
-        return value;
-      }
-
       try {
+        const desc = Object.getOwnPropertyDescriptor(target, property);
+        const value = Reflect.get(target, property, receiver);
+  
+        if (desc && !desc.writable && !desc.configurable) {
+          return value;
+        }
         if (typeof target[property] === 'function' && (target instanceof Date || target instanceof Map ||target instanceof WeakMap)) {
           return new Proxy(target[property].bind(target), handler);
         }
         return new Proxy(target[property], handler);
       } catch (err) {
+        if (target instanceof HTMLElement) {
+          return target[property];
+        }
         return Reflect.get(target, property, receiver);
       }
     },
@@ -629,4 +623,4 @@ const debounce = (fn, wait, immediate) => {
   };
 };
 
-export { templiteral, fragment, Component, watch, debounce };
+export { templiteral, fragment, condition, Component, watch, debounce };

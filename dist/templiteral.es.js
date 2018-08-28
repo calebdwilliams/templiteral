@@ -74,7 +74,7 @@ class AttributeNode {
     if (attributeValue && (attributeValue !== 'false' && attributeValue !== 'undefined')) {
       this.node.setAttribute(attributeName, attributeValue);
     } else {
-      this.node[attributeName] = false;
+      // this.node[attributeName] = false;
       this.node.removeAttribute(attributeName);
     }
   }
@@ -426,8 +426,12 @@ class Component extends HTMLElement {
   static get observedAttributes() { return [...this.boundAttributes]; }
   static get renderer() { return 'render'; }
   
-  constructor(state = {}) {
+  constructor(init) {
     super();
+    if (init) {
+      this.attachShadow(init);
+    }
+    const state = {};
     const self = this;
     const attrs = new Set();
     const stateProxy = watch(state, (target, property, descriptor) => {
@@ -564,19 +568,21 @@ class Component extends HTMLElement {
 const watch = (object, onChange) => {
   const handler = {
     get(target, property, receiver) {
-      const desc = Object.getOwnPropertyDescriptor(target, property);
-      const value = Reflect.get(target, property, receiver);
-
-      if (desc && !desc.writable && !desc.configurable) {
-        return value;
-      }
-
       try {
+        const desc = Object.getOwnPropertyDescriptor(target, property);
+        const value = Reflect.get(target, property, receiver);
+  
+        if (desc && !desc.writable && !desc.configurable) {
+          return value;
+        }
         if (typeof target[property] === 'function' && (target instanceof Date || target instanceof Map ||target instanceof WeakMap)) {
           return new Proxy(target[property].bind(target), handler);
         }
         return new Proxy(target[property], handler);
       } catch (err) {
+        if (target instanceof HTMLElement) {
+          return target[property];
+        }
         return Reflect.get(target, property, receiver);
       }
     },

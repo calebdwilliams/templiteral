@@ -20,14 +20,14 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">83.74% </span>
+        <span class="strong">83.38% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>309/369</span>
+        <span class='fraction'>311/373</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">69.86% </span>
+        <span class="strong">69.48% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>146/209</span>
+        <span class='fraction'>148/213</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">88.1% </span>
@@ -35,9 +35,9 @@
         <span class='fraction'>37/42</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">85.88% </span>
+        <span class="strong">85.47% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>298/347</span>
+        <span class='fraction'>300/351</span>
       </div>
     </div>
   </div>
@@ -679,7 +679,13 @@
 634
 635
 636
-637</td><td class="line-coverage quiet"><span class="cline-any cline-yes">1×</span>
+637
+638
+639
+640
+641
+642
+643</td><td class="line-coverage quiet"><span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
@@ -758,7 +764,7 @@
 <span class="cline-any cline-yes">109×</span>
 <span class="cline-any cline-yes">34×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">75×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">75×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1108,8 +1114,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">2×</span>
-<span class="cline-any cline-yes">585×</span>
+<span class="cline-any cline-yes">519×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">44×</span>
+<span class="cline-any cline-yes">44×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">44×</span>
 <span class="cline-any cline-yes">44×</span>
@@ -1151,15 +1161,15 @@
 <span class="cline-any cline-yes">68×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">99×</span>
+<span class="cline-any cline-yes">66×</span>
+<span class="cline-any cline-yes">33×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">33×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">66×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">99×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">99×</span>
+<span class="cline-any cline-yes">66×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1250,16 +1260,18 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1241×</span>
 <span class="cline-any cline-yes">1241×</span>
+<span class="cline-any cline-yes">1241×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1241×</span>
 <span class="cline-any cline-yes">56×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1185×</span>
 <span class="cline-any cline-yes">1185×</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1185×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">791×</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">791×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1394,7 +1406,7 @@ class AttributeNode {
     if (attributeValue &amp;&amp; (attributeValue !== 'false' &amp;&amp; attributeValue !== 'undefined')) {
       this.node.setAttribute(attributeName, attributeValue);
     } else {
-      this.node[attributeName] = false;
+      // this.node[attributeName] = false;
       this.node.removeAttribute(attributeName);
     }
   }
@@ -1746,8 +1758,12 @@ class Component extends HTMLElement {
   static get observedAttributes() { return [...this.boundAttributes]; }
   static get renderer() { return 'render'; }
   
-  constructor(state = {}) {
+  constructor(init) {
     super();
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (init) {
+<span class="cstat-no" title="statement not covered" >      this.attachShadow(init);</span>
+    }
+    const state = {};
     const self = this;
     const attrs = new Set();
     const stateProxy = watch(state, (target, property, descriptor) =&gt; {
@@ -1884,19 +1900,21 @@ class Component extends HTMLElement {
 const watch = (object, onChange) =&gt; {
   const handler = {
     get(target, property, receiver) {
-      const desc = Object.getOwnPropertyDescriptor(target, property);
-      const value = Reflect.get(target, property, receiver);
-&nbsp;
-      if (desc &amp;&amp; !desc.writable &amp;&amp; !desc.configurable) {
-        return value;
-      }
-&nbsp;
       try {
+        const desc = Object.getOwnPropertyDescriptor(target, property);
+        const value = Reflect.get(target, property, receiver);
+  
+        if (desc &amp;&amp; !desc.writable &amp;&amp; !desc.configurable) {
+          return value;
+        }
         <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof target[property] === 'function' &amp;&amp; (target instanceof Date || target instanceof Map ||target instanceof WeakMap)) {
 <span class="cstat-no" title="statement not covered" >          return new Proxy(target[property].bind(target), handler);</span>
         }
         return new Proxy(target[property], handler);
       } catch (err) {
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (target instanceof HTMLElement) {
+<span class="cstat-no" title="statement not covered" >          return target[property];</span>
+        }
         return Reflect.get(target, property, receiver);
       }
     },
@@ -1957,7 +1975,7 @@ return exports;
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Aug 21 2018 21:32:44 GMT-0500 (CDT)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Mon Aug 27 2018 21:44:15 GMT-0500 (CDT)
 </div>
 </div>
 <script src="../prettify.js"></script>

@@ -99,6 +99,8 @@ class MyEl extends Component {
       
       <h1 class="${this.username} arbitrary">Things ${this.username} needs to do</h1>
 
+      <btn-btn>Test</btn-btn
+
       <form (submit)="${this.addTodo}">
         <fieldset>
           <legend>Create a to-do</legend>
@@ -169,3 +171,25 @@ class ToDo extends Component {
 }
 
 customElements.define('to-do', ToDo);
+
+customElements.define('btn-btn', class extends Component {
+  static get boundAttributes() {
+    return ['disabled'];
+  }
+
+  static get mapStateToProps() {
+    return ['disabled'];
+  }
+
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.state = {
+      disabled: this.hasAttribute('disabled')
+    }
+  }
+
+  render() {
+    this.html`<button [disabled]="${this.state.disabled}"><slot></slot></button>`
+  }
+})

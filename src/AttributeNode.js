@@ -43,7 +43,7 @@ export class AttributeNode {
     if (attributeValue && (attributeValue !== 'false' && attributeValue !== 'undefined')) {
       this.node.setAttribute(attributeName, attributeValue);
     } else {
-      this.node[attributeName] = false;
+      // this.node[attributeName] = false;
       this.node.removeAttribute(attributeName);
     }
   }
