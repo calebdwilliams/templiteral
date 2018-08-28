@@ -99,7 +99,7 @@ class MyEl extends Component {
       
       <h1 class="${this.username} arbitrary">Things ${this.username} needs to do</h1>
 
-      <btn-btn>Test</btn-btn
+      <btn-btn>Test</btn-btn>
 
       <form (submit)="${this.addTodo}">
         <fieldset>
@@ -190,6 +190,6 @@ customElements.define('btn-btn', class extends Component {
   }
 
   render() {
-    this.html`<button [disabled]="${this.state.disabled}"><slot></slot></button>`
+    this.html`<button [disabled]="${this.state.disabled}"><slot></slot></button>`;
   }
-})
+});
