@@ -54,8 +54,6 @@ export class Template {
         configurable: false,
         writable: false
       });
-
-      this.context.onInit && typeof this.context.onInit === 'function' && this.context.onInit();
     }
   }
 

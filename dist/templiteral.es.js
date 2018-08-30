@@ -269,8 +269,6 @@ class Template {
         configurable: false,
         writable: false
       });
-
-      this.context.onInit && typeof this.context.onInit === 'function' && this.context.onInit();
     }
   }
 
@@ -542,6 +540,7 @@ class Component extends HTMLElement {
     }
     
     this.$$listening = true;
+    this.onInit();
   }
   
   disconnectedCallback() {
@@ -551,10 +550,11 @@ class Component extends HTMLElement {
       this.$$listening = false;
     }
     this[rendererSymbol] && this[rendererSymbol][removeSymbol]();
-    if (this.onDestroy && typeof this.onDestroy === 'function') {
-      this.onDestroy();
-    }
+    this.onDestroy();
   }
+
+  onInit() {}
+  onDestroy() {}
 
   emit(eventName, detail) {
     this.dispatchEvent(new CustomEvent(eventName, { 
