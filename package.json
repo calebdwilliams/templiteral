@@ -20,8 +20,8 @@
   ],
   "version": "3.3.1",
   "description": "",
-  "main": "dist/templiteral.js",
-  "module": "dist/templiteral.es.js",
+  "main": "dist/templiteral.min.js",
+  "module": "dist/templiteral.es.min.js",
   "scripts": {
     "prebuild": "npm test && npm run clean",
     "build": "rollup -c",
@@ -35,7 +35,9 @@
     "test": "karma start"
   },
   "license": "SEE LICENSE IN LICENSE.md",
-  "dependencies": {},
+  "dependencies": {
+    "stylit": "^0.3.0"
+  },
   "devDependencies": {
     "body-parser": "^1.18.3",
     "compression": "^1.7.3",
