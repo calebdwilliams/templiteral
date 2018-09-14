@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.4.0"></a>
+# [3.4.0](https://github.com/calebdwilliams/templiteral/compare/v3.3.2...v3.4.0) (2018-09-14)
+
+
+### Features
+
+* **stylit:** Added stylit and Component styles support ([ad4e6d9](https://github.com/calebdwilliams/templiteral/commit/ad4e6d9))
+
+
+
 <a name="3.3.2"></a>
 ## [3.3.2](https://github.com/calebdwilliams/templiteral/compare/v3.3.1...v3.3.2) (2018-09-07)
 
