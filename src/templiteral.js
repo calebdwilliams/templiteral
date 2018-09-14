@@ -1,7 +1,9 @@
 import { Template } from './Template.js';
 import { rendererSymbol, removeSymbol } from './patterns.js';
+import { StyleSheetRegistry } from '../node_modules/stylit/lib/stylit.js';
 
 const templateCache = new WeakMap();
+const styleRegistry = new StyleSheetRegistry();
 
 export function templiteral(location = this, context = this) {
   location.shadowRoot ? location = location.shadowRoot : null;
@@ -49,6 +51,11 @@ export function condition(bool) {
 }
 
 export class Component extends HTMLElement {
+  static get styles() { return styleRegistry; }
+  static get defineStyles() { return this.styles.define.bind(styleRegistry); }
+  static get hasStyles() { return this.styles.registry.has.bind(styleRegistry.registry); }
+  static get loadStyles() { return this.styles.load.bind(styleRegistry); }
+  static get adoptStyles() { return this.styles.adopt.bind(styleRegistry); }
   static get boundAttributes() { return []; }
   static get observedAttributes() { return [...this.boundAttributes]; }
   static get renderer() { return 'render'; }
@@ -166,6 +173,10 @@ export class Component extends HTMLElement {
       if (!this.$$listening) {
         this.addEventListener('ComponentRender', this.$$renderListener);
       }
+    }
+
+    if (this.constructor.hasStyles(this.tagName.toLowerCase())) {
+      this.constructor.adoptStyles(this.shadowRoot ? this.shadowRoot : this, this.tagName.toLowerCase());
     }
     
     this.$$listening = true;

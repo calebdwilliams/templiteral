@@ -199,3 +199,44 @@ ${this.if(this.showTodos)`
   </ul>
 `}
 ```
+
+## Styling Component
+
+There are two primary ways of styling `Component` instances. The first and most obvious is to simply use a `<style>` tag inside of your render callback. If, however, you would prefer to keep your markup and style declarations independent, you can use Component's static `defineStyles` method. The method takes two arguments: `tagName:string, styleText:string`.
+
+```javascript
+import { Component } from 'templiteral';
+
+class StyleExample extends Component {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+  }
+
+  render() {
+    this.html`<h1>This content will be the color tomato</h1>`;
+  }
+}
+
+Component.defineStyles('style-example', `
+  * { color: tomato; }
+`);
+
+customElements.define('style-example', StyleExample);
+```
+
+Any element will only assume the styles associated with it's tag name, so any custom extensions can be manually adopted:
+
+```javascript
+class OtherExample extends StyleExample {
+  onInit() {
+    this.constructor.adoptStyles(this.shadowRoot, 'style-example');
+  }
+}
+```
+
+You can also asynchronously load styles without affecting the parent document using `Component.loadStyles`, which takes a tag name and a URL to load. However, if you wish to use this with a root component, you may experience a flash of unstyled content. Styles loaded using this method will be immediately fetched, and the resultant style text will only affect the adopting components.
+
+```javascript
+Component.loadStyles('tag-name', '/styles/tagName.css');
+```

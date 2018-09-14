@@ -1,7 +1,8 @@
-import { Component } from '../../templiteral.js';
+import { Component } from '../templiteral.js';
 import './create-todo.js';
 import './todo-item.js';
 import './todo-footer.js';
+import './styles.js';
 
 export class TodoMVC extends Component {
   static get boundAttributes() { return ['filter']; }

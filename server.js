@@ -1,4 +1,6 @@
 /* eslint-env node */
+'use strict'; 
+
 const express     = require('express');
 const compression = require('compression');
 const rollup      = require('express-middleware-rollup');
@@ -18,7 +20,7 @@ app.use(rollup({
   rebuild: 'always',
   serve: 'on-compile',
   bundleOpts: {
-    format: 'es'
+    format: 'es',
   }
 }));
 
