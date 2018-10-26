@@ -7,10 +7,12 @@ class YesComp extends Component {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    this.state = {
+      active: this.getAttribute('active') || false
+    };
   }
 
   changeActive() {
-    console.log(this.active, this.state.active);
     this.state.active = !this.state.active;
   }
 
