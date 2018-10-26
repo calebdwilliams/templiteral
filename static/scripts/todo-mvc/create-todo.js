@@ -23,9 +23,6 @@ export class CreateTodo extends Component {
 
   render() {
     this.html`
-    <style>
-        
-    </style>
     <form ref="todoForm" (submit)="${this.saveTodo}" autocomplete="off">
         <input type="text" id="create-todo" ref="input" placeholder="What needs to be done?">
     </form>

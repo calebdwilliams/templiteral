@@ -1,5 +1,56 @@
 import { Component } from '../../templiteral.js';
 
+Component.defineStyles('todo-footer', `.todo-footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 15px;
+  position: relative;
+  z-index: 3;
+}
+.todo-footer:before {
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), 0 8px 0 -3px #f6f6f6, 0 9px 1px -3px rgba(0, 0, 0, 0.2), 0 16px 0 -6px #f6f6f6, 0 17px 2px -6px rgba(0, 0, 0, 0.2);
+  content: "";
+  height: 50px;
+  overflow: hidden;
+  position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  z-index: -1;
+}
+.filter {
+  display: flex;
+}
+.filter button {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  padding: 3px 7px;
+}
+.filter button.active {
+  border: 1px solid rgba(175, 47, 47, 0.2);
+  border-radius: 4px;
+}
+.filter button:focus {
+  border: 2px solid #cc9a9a;
+  outline: 0;
+}
+.clear-completed {
+  display: flex;
+  justify-content: flex-end;
+}
+.clear-completed button {
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+}
+.clear-completed button:focus {
+  border: 2px solid #cc9a9a;
+  outline: 0;
+}`);
+
 Component.defineStyles('todo-item', `
 :host {
     background: #fff;
@@ -115,4 +166,11 @@ input::placeholder {
 }
 .mark-complete:hover {
     color: #121212;
+}`);
+
+Component.defineStyles('todo-mvc', `todo-mvc {
+  background: #fff;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 25px 50px 0 rgba(0, 0, 0, 0.1);
+  display: block;
+  position: relative;
 }`);

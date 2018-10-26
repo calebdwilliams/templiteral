@@ -39,6 +39,10 @@ export class TodoMVC extends Component {
     return (todo) => this.fragment(todo.id)`<todo-item title="${todo.title}" [completed]="${todo.completed}" (title-change)="${event => this.titleChange(todo, event.detail.newTitle)}" (state-change)="${event => this.toggleTodo(todo, event.detail.completed)}" (delete-todo)="${() => this.removeTodo(todo)}"></todo-item>`;
   }
 
+  get remaining() {
+    
+  }
+
   addTodo(event) {
     this.state.todos.push(event.detail);
   }
@@ -73,18 +77,8 @@ export class TodoMVC extends Component {
 
   render() {
     return this.html`
-        <style>
-          todo-mvc {
-            background: #fff;
-            box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 25px 50px 0 rgba(0, 0, 0, 0.1);
-            display: block;
-            position: relative;
-          }
-        </style>
         <create-todo (todo-created)="${this.addTodo}" (all-completed)="${this.allCompleted}"></create-todo>
-        <section>
-          ${this[this.state.filter]}
-        </section>
+        <section>${this[this.state.filter]}</section>
         <todo-footer [todos]="${this.state.todos}" (set-filter)="${this.changeFilter}" filter="${this.state.filter}" (clear-completed)="${this.clearCompleted}" remaining="${this.state.todos.filter(todo => !todo.completed).length || '0'}"></todo-footer>
     `;
   }

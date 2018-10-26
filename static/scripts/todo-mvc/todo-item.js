@@ -2,6 +2,7 @@ import { Component } from '../../templiteral.js';
 
 export class TodoItem extends Component {
   static get boundAttributes() { return ['title', 'completed', 'edit']; }
+  static get booleanAttributes() { return ['completed']; }
     
   constructor() {
     super();
