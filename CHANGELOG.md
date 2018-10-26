@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.6.0"></a>
+# [3.6.0](https://github.com/calebdwilliams/templiteral/compare/v3.5.0...v3.6.0) (2018-10-26)
+
+
+### Features
+
+* **Component:** Removed static renderer and just called render automatically ([aaf8ef0](https://github.com/calebdwilliams/templiteral/commit/aaf8ef0))
+
+
+
 <a name="3.5.0"></a>
 # [3.5.0](https://github.com/calebdwilliams/templiteral/compare/v3.4.0...v3.5.0) (2018-10-26)
 
