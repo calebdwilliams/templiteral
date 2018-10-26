@@ -1,5 +1,12 @@
 import { Component } from '../../templiteral.js';
 
+Component.defineStyles('todo-mvc', `todo-mvc {
+  background: #fff;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 25px 50px 0 rgba(0, 0, 0, 0.1);
+  display: block;
+  position: relative;
+}`);
+
 Component.defineStyles('todo-item', `
 :host {
     background: #fff;

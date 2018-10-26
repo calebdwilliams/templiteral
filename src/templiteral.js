@@ -90,11 +90,7 @@ export class Component extends HTMLElement {
       },
       set(_state) {
         Object.entries(_state).forEach(([key, value]) => {
-          if (typeof _state[key] !== 'object' || !value) {
-            state[key] = value;
-          } else if (value) {
-            state[key] = watch(value, () => this[this.constructor.renderer]());
-          }
+          state[key] = value;
         });
       }
     });
@@ -247,43 +243,43 @@ export const debounce = (fn, wait, immediate) => {
   };
 };
 
-export const watch = (object, onChange) => {
-  const handler = {
-    get(target, property, receiver) {
-      try {
-        const desc = Object.getOwnPropertyDescriptor(target, property);
-        const value = Reflect.get(target, property, receiver);
+// export const watch = (object, onChange) => {
+//   const handler = {
+//     get(target, property, receiver) {
+//       try {
+//         const desc = Object.getOwnPropertyDescriptor(target, property);
+//         const value = Reflect.get(target, property, receiver);
   
-        if (desc && !desc.writable && !desc.configurable) {
-          return value;
-        }
-        if (typeof target[property] === 'function' && (target instanceof Date || target instanceof Map ||target instanceof WeakMap)) {
-          return new Proxy(target[property].bind(target), handler);
-        }
-        return new Proxy(target[property], handler);
-      } catch (err) {
-        if (target instanceof HTMLElement) {
-          return target[property];
-        }
-        return Reflect.get(target, property, receiver);
-      }
-    },
-    set(target, property, value) {
-      target[property] = value;
-      onChange(target, property, { value });
-      return true;
-    },
-    defineProperty(target, property, descriptor) {
-      const define = Reflect.defineProperty(target, property, descriptor);
-      onChange(target, property, descriptor);
-      return define;
-    },
-    deleteProperty(target, property, descriptor) {
-      const deleted = Reflect.deleteProperty(target, property);
-      onChange(target, property, descriptor);
-      return deleted;
-    }
-  };
+//         if (desc && !desc.writable && !desc.configurable) {
+//           return value;
+//         }
+//         if (typeof target[property] === 'function' && (target instanceof Date || target instanceof Map ||target instanceof WeakMap)) {
+//           return new Proxy(target[property].bind(target), handler);
+//         }
+//         return new Proxy(target[property], handler);
+//       } catch (err) {
+//         if (target instanceof HTMLElement) {
+//           return target[property];
+//         }
+//         return Reflect.get(target, property, receiver);
+//       }
+//     },
+//     set(target, property, value) {
+//       target[property] = value;
+//       onChange(target, property, { value });
+//       return true;
+//     },
+//     defineProperty(target, property, descriptor) {
+//       const define = Reflect.defineProperty(target, property, descriptor);
+//       onChange(target, property, descriptor);
+//       return define;
+//     },
+//     deleteProperty(target, property, descriptor) {
+//       const deleted = Reflect.deleteProperty(target, property);
+//       onChange(target, property, descriptor);
+//       return deleted;
+//     }
+//   };
 
-  return new Proxy(object, handler);
-};
+//   return new Proxy(object, handler);
+// };

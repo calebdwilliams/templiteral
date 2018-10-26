@@ -40,13 +40,17 @@ export class TodoMVC extends Component {
   }
 
   addTodo(event) {
-    this.state.todos.push(event.detail);
+    const { todos } = this.state;
+    todos.push(event.detail);
+    this.setState({ todos });
   }
 
   allCompleted() {
-    this.state.todos.forEach(todo => {
+    const { todos } = this.state;
+    todos.forEach(todo => {
       todo.completed = true;
     });
+    this.setState({ todos });
   }
 
   changeFilter(event) {
@@ -66,23 +70,19 @@ export class TodoMVC extends Component {
   }
 
   titleChange(todo, newTitle) {
-    todo.title = newTitle;
+    const { todos } = this.state;
+    todos.find(_todo => _todo === todo).title = newTitle;
+    this.setState({ todos });
   }
   
   toggleTodo(todo, completed) {
-    todo.completed = completed;
+    const { todos } = this.state;
+    todos.find(_todo => _todo === todo).completed = completed;
+    this.setState({ todos });
   }
 
   render() {
     return this.html`
-        <style>
-          todo-mvc {
-            background: #fff;
-            box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 25px 50px 0 rgba(0, 0, 0, 0.1);
-            display: block;
-            position: relative;
-          }
-        </style>
         <create-todo (todo-created)="${this.addTodo}" (all-completed)="${this.allCompleted}"></create-todo>
         <section>
           ${this[this.state.filter]}

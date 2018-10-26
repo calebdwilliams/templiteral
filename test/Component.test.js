@@ -138,8 +138,10 @@ describe('Component', () => {
     });
 
     it('should use the default Array functions to reset the list', () => {
+      const todos = component.state.todos;
+      todos[0].completed = true;
+      component.setState({ todos });
       component.state.todos[0].completed = true;
-      console.log(component.state.todos)
       expect([...component.shadowRoot.querySelectorAll('li')].length).toBe(2);
     });
   });

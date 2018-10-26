@@ -530,6 +530,19 @@ class Component extends HTMLElement {
   static get booleanAttributes() { return []; }
   static get renderer() { return 'render'; }
   
+  setState(stateAmmend = {}) {
+    Object.entries(stateAmmend).forEach(([key, value]) => {
+      if (this.constructor.booleanAttributes.includes(key)) {
+        value = value === '' ? true : !!value;
+      }
+      if (this.constructor.boundProps.includes(key)) {
+        this[key] = value;
+      }
+      this.state[key] = value;
+    });
+    this[this.constructor.renderer]();
+  }
+
   constructor(init) {
     super();
     if (init) {
@@ -538,34 +551,15 @@ class Component extends HTMLElement {
     const state = {};
     const self = this;
     const attrs = new Set();
-    const stateProxy = watch(state, (target, property, descriptor) => {
-      try {
-        if (this.constructor.boundAttributes.includes(property)) {
-          if (descriptor.value === false || descriptor.value === null) {
-            this.removeAttribute(property);
-          } else {
-            this.setAttribute(property, descriptor.value);
-          }
-        }
-        this[this.constructor.renderer].bind(this)();
-      } catch (err) {
-        console.log(err);
-      }
-    });
 
     Object.defineProperty(this, 'state', {
       get() {
-        return stateProxy;
+        return state;
       },
       set(_state) {
-        Object.keys(_state).forEach(key => {
-          if (typeof _state[key] !== 'string' || typeof _state[key] !== 'number') {
-            state[key] = _state[key];
-          } else {
-            state[key] = watch(_state[key], () => this[this.constructor.renderer]());
-          }
+        Object.entries(_state).forEach(([key, value]) => {
+          state[key] = value;
         });
-        return true;
       }
     });
 
@@ -637,12 +631,12 @@ class Component extends HTMLElement {
   attributeChangedCallback(name, oldValue, newValue) {
     if (this.constructor.booleanAttributes.includes(name) && oldValue !== newValue) {
       newValue = newValue === '' ? true : newValue;
-      this.state[name] = !!newValue;
+      this.setState({ [name]: !!newValue });
       if (this.constructor.boundProps.includes(name)) {
         this[name] = !!newValue;
       }
     } else if (oldValue !== newValue) {
-      this.state[name] = newValue;
+      this.setState({ [name]: newValue });
       if (this.constructor.boundProps.includes(name)) {
         this[name] = newValue;
       }
@@ -696,47 +690,6 @@ class Component extends HTMLElement {
   }
 }
 
-const watch = (object, onChange) => {
-  const handler = {
-    get(target, property, receiver) {
-      try {
-        const desc = Object.getOwnPropertyDescriptor(target, property);
-        const value = Reflect.get(target, property, receiver);
-  
-        if (desc && !desc.writable && !desc.configurable) {
-          return value;
-        }
-        if (typeof target[property] === 'function' && (target instanceof Date || target instanceof Map ||target instanceof WeakMap)) {
-          return new Proxy(target[property].bind(target), handler);
-        }
-        return new Proxy(target[property], handler);
-      } catch (err) {
-        if (target instanceof HTMLElement) {
-          return target[property];
-        }
-        return Reflect.get(target, property, receiver);
-      }
-    },
-    set(target, property, value) {
-      target[property] = value;
-      onChange(target, property, { value });
-      return true;
-    },
-    defineProperty(target, property, descriptor) {
-      const define = Reflect.defineProperty(target, property, descriptor);
-      onChange(target, property, descriptor);
-      return define;
-    },
-    deleteProperty(target, property, descriptor) {
-      const deleted = Reflect.deleteProperty(target, property);
-      onChange(target, property, descriptor);
-      return deleted;
-    }
-  };
-
-  return new Proxy(object, handler);
-};
-
 const debounce = (fn, wait, immediate) => {
   let timeout;
 
@@ -758,11 +711,51 @@ const debounce = (fn, wait, immediate) => {
   };
 };
 
+// export const watch = (object, onChange) => {
+//   const handler = {
+//     get(target, property, receiver) {
+//       try {
+//         const desc = Object.getOwnPropertyDescriptor(target, property);
+//         const value = Reflect.get(target, property, receiver);
+  
+//         if (desc && !desc.writable && !desc.configurable) {
+//           return value;
+//         }
+//         if (typeof target[property] === 'function' && (target instanceof Date || target instanceof Map ||target instanceof WeakMap)) {
+//           return new Proxy(target[property].bind(target), handler);
+//         }
+//         return new Proxy(target[property], handler);
+//       } catch (err) {
+//         if (target instanceof HTMLElement) {
+//           return target[property];
+//         }
+//         return Reflect.get(target, property, receiver);
+//       }
+//     },
+//     set(target, property, value) {
+//       target[property] = value;
+//       onChange(target, property, { value });
+//       return true;
+//     },
+//     defineProperty(target, property, descriptor) {
+//       const define = Reflect.defineProperty(target, property, descriptor);
+//       onChange(target, property, descriptor);
+//       return define;
+//     },
+//     deleteProperty(target, property, descriptor) {
+//       const deleted = Reflect.deleteProperty(target, property);
+//       onChange(target, property, descriptor);
+//       return deleted;
+//     }
+//   };
+
+//   return new Proxy(object, handler);
+// };
+
 exports.templiteral = templiteral;
 exports.fragment = fragment;
 exports.condition = condition;
 exports.Component = Component;
-exports.watch = watch;
 exports.debounce = debounce;
 
 return exports;
