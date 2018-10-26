@@ -1,9 +1,8 @@
 import { Component } from '../templiteral.js';
 
 class YesComp extends Component {
-  static get boundAttributes() {
-    return ['id', 'active'];
-  }
+  static get boundAttributes() { return ['id', 'active']; }
+  static get booleanAttributes() { return ['active']; }
 
   constructor() {
     super();
@@ -11,18 +10,15 @@ class YesComp extends Component {
   }
 
   changeActive() {
-    if (this.active !== 'false') {
-      this.active = !this.active;
-    } else {
-      this.active = true;
-    }
+    console.log(this.active, this.state.active);
+    this.state.active = !this.state.active;
   }
 
   render() {
     this.html`
-      <div style="color: ${this.active ? 'tomato' : 'rebeccapurple' }">
+      <div style="color: ${this.state.active ? 'tomato' : 'rebeccapurple' }">
         <h1>${this.id}</h1>
-        <button (click)="${this.changeActive}">${this.active}</h2>
+        <button (click)="${this.changeActive}">${this.state.active}</h2>
       </div>
     `;
   }
@@ -86,7 +82,7 @@ class NoComp extends HTMLElement {
 customElements.define('no-comp', NoComp);
 
 for (let i = 0; i < 1000; i += 1) {
-  const el = document.createElement('no-comp');
+  const el = document.createElement('yes-comp');
   el.setAttribute('id', i);
   !!(i % 2) && el.setAttribute('active', !!(i % 2));
   document.body.appendChild(el);

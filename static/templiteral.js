@@ -624,10 +624,10 @@ class Component extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    if (oldValue !== newValue) {
+    if (this.constructor.booleanAttributes.includes(name) && oldValue !== newValue) {
+      this.state[name] = !!newValue;
+    } else if (oldValue !== newValue) {
       this.state[name] = newValue;
-    } else if (newValue === '' && this.hasAttribute(name)) {
-      this.state[name] = true;
     }
     this.emit('ComponentRender', {
       component: this,
