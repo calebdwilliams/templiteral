@@ -525,7 +525,9 @@ class Component extends HTMLElement {
   static get loadStyles() { return this.styles.load.bind(styleRegistry); }
   static get adoptStyles() { return this.styles.adopt.bind(styleRegistry); }
   static get boundAttributes() { return []; }
+  static get boundProps() { return []; }
   static get observedAttributes() { return [...this.boundAttributes]; }
+  static get booleanAttributes() { return []; }
   static get renderer() { return 'render'; }
   
   constructor(init) {
@@ -570,13 +572,27 @@ class Component extends HTMLElement {
     this.constructor.boundAttributes.map((attr, index, currentArray) => {
       Object.defineProperty(this, attr, {
         get() {
-          return this.getAttribute(attr) || this.hasAttribute(attr);
+          if (this.constructor.booleanAttributes.includes(attr)) {
+            return this.hasAttribute(attr);
+          }
+          return this.getAttribute(attr);
         },
-        set(_attr) {
-          if (_attr || _attr === '') {
-            this.setAttribute(attr, _attr);
+        set(value) {
+          if (this.constructor.booleanAttributes.includes(attr)) {
+            if (value || value === '') {
+              this.setAttribute(attr, true);
+            } else {
+              this.removeAttribute(attr);
+            }
           } else {
-            this.removeAttribute(attr);
+            if (value) {
+              this.setAttribute(attr, value);
+            } else {
+              this.removeAttribute(attr);
+            }
+          }
+          if (this.constructor.boundProps.includes(name)) {
+            this[name] = value;
           }
           if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function' && this.isConnected && attrs.size === currentArray.length) {
             this[this.constructor.renderer]();
@@ -619,10 +635,17 @@ class Component extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    if (oldValue !== newValue) {
+    if (this.constructor.booleanAttributes.includes(name) && oldValue !== newValue) {
+      newValue = newValue === '' ? true : newValue;
+      this.state[name] = !!newValue;
+      if (this.constructor.boundProps.includes(name)) {
+        this[name] = !!newValue;
+      }
+    } else if (oldValue !== newValue) {
       this.state[name] = newValue;
-    } else if (newValue === '' && this.hasAttribute(name)) {
-      this.state[name] = true;
+      if (this.constructor.boundProps.includes(name)) {
+        this[name] = newValue;
+      }
     }
     this.emit('ComponentRender', {
       component: this,
