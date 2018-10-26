@@ -13,7 +13,7 @@ export class TodoFooter extends Component {
   }
   
   setFilter(type) {
-    this.state.filter = type;
+    this.setState({ filter: type });
     this.emit('set-filter', { type: type });
   }
   

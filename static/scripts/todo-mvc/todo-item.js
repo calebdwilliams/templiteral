@@ -19,7 +19,7 @@ export class TodoItem extends Component {
   
   toggle(event) {
     event.preventDefault();
-    this.state.edit = !this.state.edit;
+    this.setState({ edit: !this.state.edit });
   }
   
   toggleTodo(event) {
@@ -38,7 +38,7 @@ export class TodoItem extends Component {
               <span class="sr-only">${this.state.title} completed</span>
           </label>
           <button (click)="${event => event.preventDefault()}" (dblclick)="${this.toggle}" class="edit-todo ${this.state.edit ? 'hidden' : ''} ${this.state.completed ? 'todo-completed' : ''}">${this.state.title}</button>
-          <input type="text" name="todoTitle" id="todoTitle" value="${this.state.title}" class="todo-title ${this.state.edit ? '' : 'hidden'}" (change)="${this.updateTitle}" (blur)="${() => this.state.edit = false}" autofocus>
+          <input type="text" name="todoTitle" id="todoTitle" value="${this.state.title}" class="todo-title ${this.state.edit ? '' : 'hidden'}" (change)="${this.updateTitle}" (blur)="${() => this.setState({ edit: false })}" autofocus>
           <button class="delete-todo ${this.state.edit ? 'hidden' : ''}" (click)="${this.deleteTodo}">×</button>
         </form>
       `;

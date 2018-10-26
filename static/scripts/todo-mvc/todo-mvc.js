@@ -50,17 +50,19 @@ export class TodoMVC extends Component {
   }
 
   changeFilter(event) {
-    this.state.filter = event.detail.type;
+    this.setState({ filter: event.detail.type });
   }
 
   clearCompleted() {
-    this.state.todos = this.state.todos.filter(todo => !todo.completed);
+    this.setState({ todos: this.state.todos.filter(todo => !todo.completed )});
   }
 
   removeTodo(todo) {
     const { id } = todo;
     const remove = this.state.todos.reduce((current, next) => current && current.id === id ? current : next, null);
-    this.state.todos.splice(this.state.todos.indexOf(remove), 1);
+    this.setState({
+      todos: this.state.todos.splice(this.state.todos.indexOf(remove), 1)
+    });
   }
 
   titleChange(todo, newTitle) {

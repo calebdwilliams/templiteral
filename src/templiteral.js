@@ -62,6 +62,19 @@ export class Component extends HTMLElement {
   static get booleanAttributes() { return []; }
   static get renderer() { return 'render'; }
   
+  setState(stateAmmend = {}) {
+    Object.entries(stateAmmend).forEach(([key, value]) => {
+      if (this.constructor.booleanAttributes.includes(key)) {
+        value = value === '' ? true : !!value;
+      }
+      if (this.constructor.boundProps.includes(key)) {
+        this[key] = value;
+      }
+      this.state[key] = value;
+    });
+    this[this.constructor.renderer]();
+  }
+
   constructor(init) {
     super();
     if (init) {
@@ -70,34 +83,19 @@ export class Component extends HTMLElement {
     const state = {};
     const self = this;
     const attrs = new Set();
-    const stateProxy = watch(state, (target, property, descriptor) => {
-      try {
-        if (this.constructor.boundAttributes.includes(property)) {
-          if (descriptor.value === false || descriptor.value === null) {
-            this.removeAttribute(property);
-          } else {
-            this.setAttribute(property, descriptor.value);
-          }
-        }
-        this[this.constructor.renderer].bind(this)();
-      } catch (err) {
-        console.log(err);
-      }
-    });
 
     Object.defineProperty(this, 'state', {
       get() {
-        return stateProxy;
+        return state;
       },
       set(_state) {
-        Object.keys(_state).forEach(key => {
-          if (typeof _state[key] !== 'string' || typeof _state[key] !== 'number') {
-            state[key] = _state[key];
-          } else {
-            state[key] = watch(_state[key], () => this[this.constructor.renderer]());
+        Object.entries(_state).forEach(([key, value]) => {
+          if (typeof _state[key] !== 'object' || !value) {
+            state[key] = value;
+          } else if (value) {
+            state[key] = watch(value, () => this[this.constructor.renderer]());
           }
         });
-        return true;
       }
     });
 
@@ -169,12 +167,12 @@ export class Component extends HTMLElement {
   attributeChangedCallback(name, oldValue, newValue) {
     if (this.constructor.booleanAttributes.includes(name) && oldValue !== newValue) {
       newValue = newValue === '' ? true : newValue;
-      this.state[name] = !!newValue;
+      this.setState({ [name]: !!newValue });
       if (this.constructor.boundProps.includes(name)) {
         this[name] = !!newValue;
       }
     } else if (oldValue !== newValue) {
-      this.state[name] = newValue;
+      this.setState({ [name]: newValue });
       if (this.constructor.boundProps.includes(name)) {
         this[name] = newValue;
       }
@@ -228,6 +226,27 @@ export class Component extends HTMLElement {
   }
 }
 
+export const debounce = (fn, wait, immediate) => {
+  let timeout;
+
+  return function executed(...args) {
+    const context = this;
+    
+    const later = () => {
+      timeout = null;
+      !immediate && Reflect.apply(fn, context, args);
+    };
+
+    const callNow = immediate && !timeout;
+
+    clearTimeout(timeout);
+
+    timeout = setTimeout(later, wait);
+
+    callNow && Reflect.apply(fn, context, args);
+  };
+};
+
 export const watch = (object, onChange) => {
   const handler = {
     get(target, property, receiver) {
@@ -267,25 +286,4 @@ export const watch = (object, onChange) => {
   };
 
   return new Proxy(object, handler);
-};
-
-export const debounce = (fn, wait, immediate) => {
-  let timeout;
-
-  return function executed(...args) {
-    const context = this;
-    
-    const later = () => {
-      timeout = null;
-      !immediate && Reflect.apply(fn, context, args);
-    };
-
-    const callNow = immediate && !timeout;
-
-    clearTimeout(timeout);
-
-    timeout = setTimeout(later, wait);
-
-    callNow && Reflect.apply(fn, context, args);
-  };
 };

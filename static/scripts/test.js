@@ -8,12 +8,15 @@ class YesComp extends Component {
     super();
     this.attachShadow({ mode: 'open' });
     this.state = {
-      active: this.getAttribute('active') || false
+      active: this.getAttribute('active') || false,
+      test: ['a', 'b']
     };
   }
 
   changeActive() {
-    this.state.active = !this.state.active;
+    this.setState({
+      active: !this.state.active
+    });
   }
 
   render() {

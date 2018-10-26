@@ -1,4 +1,4 @@
-/* global templit describe beforeEach afterEach it expect */
+/* global templit describe beforeEach afterEach it expect spyOn */
 let component;
 const { Component } = templit;
 
@@ -50,6 +50,7 @@ describe('Component', () => {
 
     class ToDo extends Component {
       static get boundAttributes() { return ['title', 'completed']; }
+      static get booleanAttributes() { return ['completed']; }
       constructor() {
         super();
         this.state = {
@@ -115,7 +116,6 @@ describe('Component', () => {
     });
 
     it('Manages named attributes', () => {
-      console.log(component.works, component.hasAttribute('works'), component);
       expect(component.works).toBeTruthy();
     });
   });
@@ -139,6 +139,7 @@ describe('Component', () => {
 
     it('should use the default Array functions to reset the list', () => {
       component.state.todos[0].completed = true;
+      console.log(component.state.todos)
       expect([...component.shadowRoot.querySelectorAll('li')].length).toBe(2);
     });
   });
