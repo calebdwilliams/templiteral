@@ -523,6 +523,7 @@ class Component extends HTMLElement {
   static get adoptStyles() { return this.styles.adopt.bind(styleRegistry); }
   static get boundAttributes() { return []; }
   static get observedAttributes() { return [...this.boundAttributes]; }
+  static get booleanAttributes() { return []; }
   static get renderer() { return 'render'; }
   
   constructor(init) {
@@ -567,10 +568,17 @@ class Component extends HTMLElement {
     this.constructor.boundAttributes.map((attr, index, currentArray) => {
       Object.defineProperty(this, attr, {
         get() {
-          return this.getAttribute(attr) || this.hasAttribute(attr);
+          const value = this.getAttribute(attr);
+          if (this.constructor.booleanAttributes.includes(attr)) {
+            return !!value;
+          }
+          return this.getAttribute(attr);
         },
         set(_attr) {
-          if (_attr || _attr === '') {
+          if (this.constructor.booleanAttributes.includes(attr)) {
+            return !!_attr;
+          }
+          if (_attr) {
             this.setAttribute(attr, _attr);
           } else {
             this.removeAttribute(attr);
