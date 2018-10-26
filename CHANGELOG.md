@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.5.0"></a>
+# [3.5.0](https://github.com/calebdwilliams/templiteral/compare/v3.4.0...v3.5.0) (2018-10-26)
+
+
+### Bug Fixes
+
+* **booleanAttributes:** Fixed boolean attribute implementation ([05a95f4](https://github.com/calebdwilliams/templiteral/commit/05a95f4))
+
+
+### Features
+
+* **booleanAttributes:** Added booleanAttributes and changed boundAttributes ([d496633](https://github.com/calebdwilliams/templiteral/commit/d496633))
+
+
+
 <a name="3.4.0"></a>
 # [3.4.0](https://github.com/calebdwilliams/templiteral/compare/v3.3.2...v3.4.0) (2018-09-14)
 
