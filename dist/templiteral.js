@@ -528,7 +528,6 @@ class Component extends HTMLElement {
   static get boundProps() { return []; }
   static get observedAttributes() { return [...this.boundAttributes]; }
   static get booleanAttributes() { return []; }
-  static get renderer() { return 'render'; }
   
   constructor(init) {
     super();
@@ -547,7 +546,7 @@ class Component extends HTMLElement {
             this.setAttribute(property, descriptor.value);
           }
         }
-        this[this.constructor.renderer].bind(this)();
+        this.render.bind(this)();
       } catch (err) {
         console.log(err);
       }
@@ -562,7 +561,7 @@ class Component extends HTMLElement {
           if (typeof _state[key] !== 'string' || typeof _state[key] !== 'number') {
             state[key] = _state[key];
           } else {
-            state[key] = watch(_state[key], () => this[this.constructor.renderer]());
+            state[key] = watch(_state[key], () => this.render());
           }
         });
         return true;
@@ -594,8 +593,8 @@ class Component extends HTMLElement {
           if (this.constructor.boundProps.includes(name)) {
             this[name] = value;
           }
-          if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function' && this.isConnected && attrs.size === currentArray.length) {
-            this[this.constructor.renderer]();
+          if (this.isConnected && attrs.size === currentArray.length) {
+            this.render();
           }
           attrs.add(attr);
         }
@@ -654,16 +653,14 @@ class Component extends HTMLElement {
   }
 
   get $$renderListener() {
-    return this[this.constructor.renderer];
+    return this.render;
   }
   
   connectedCallback() {
-    if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function') {
-      this[this.constructor.renderer]();
+    this.render();
 
-      if (!this.$$listening) {
-        this.addEventListener('ComponentRender', this.$$renderListener);
-      }
+    if (!this.$$listening) {
+      this.addEventListener('ComponentRender', this.$$renderListener);
     }
 
     if (this.constructor.hasStyles(this.tagName.toLowerCase())) {
@@ -676,10 +673,8 @@ class Component extends HTMLElement {
   
   disconnectedCallback() {
     templateCache.delete(this);
-    if (this.constructor.renderer && typeof this[this.constructor.renderer] === 'function') {
-      this.removeEventListener('ComponentRender', this.$$renderListener);
-      this.$$listening = false;
-    }
+    this.removeEventListener('ComponentRender', this.$$renderListener);
+    this.$$listening = false;
     this[rendererSymbol] && this[rendererSymbol][removeSymbol]();
     this.onDestroy();
   }
@@ -694,6 +689,8 @@ class Component extends HTMLElement {
       detail 
     }));
   }
+
+  render() {}
 }
 
 const watch = (object, onChange) => {

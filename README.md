@@ -88,7 +88,11 @@ Similar to the event bindings above, property bindings use the bracket notation 
 
 Templiteral exports a `Component` abstract class that provides a significant boilerplate for building custom elements. By utilizing the built-in static getter `boundAttributes` which returns an array of property names, you will keep your attribute and property vaules in sync.
 
-In addition, `Component` adds a static getter for a render method (`renderer`) which will be called when any bound attribute changes. Along with the renderer, a new element method, `html` serves as an alias for `this.templiteral()`:
+If a bound attribute is a boolean value, the component supports a static getter `booleanAttributes`. Note that all boolean attributes must also be bound attributes.
+
+If an attribute is also set inside the static `boundProps` array, it will be reflected inside the component itself. The state, property and attribute will all be bound together. A change to one will be reflected in the others.
+
+In addition, `Component`'s render method will be called when any bound attribute changes. Along with the renderer, a new element method, `html` serves as an alias for `this.templiteral()`:
 
 [See this demo on CodePen.](https://codepen.io/calebdwilliams/pen/qyOGJO?editors=1010#0)
 
@@ -107,8 +111,7 @@ class HelloWorld extends Component {
     this.interval = setInterval(this.updateTime.bind(this), 100);
   }
   
-  disconnectedCallback() {
-    super.disconnectedCallback();
+  onDestroy() {
     window.clearInterval(this.interval);
   }
  
@@ -118,8 +121,8 @@ class HelloWorld extends Component {
  
   render() {
     this.html`
-      <h1>Hello ${this.who}</h1>
-      <p>${this.now}</p>
+      <h1>Hello ${this.state.who}</h1>
+      <p>${this.state.now}</p>
     `;
   }
 }

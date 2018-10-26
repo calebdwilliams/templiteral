@@ -105,10 +105,6 @@ describe('Component', () => {
     it('Has an fragment method', () => {
       expect(component.fragment).toBeDefined();
     });
-    
-    it('Has a default renderer', () => {
-      expect(component.constructor.renderer).toBe('render');
-    });
 
     it('Manages bound attributes', () => {
       expect(component.unit).toBe('karma');
