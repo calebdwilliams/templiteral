@@ -1,7 +1,7 @@
 import { ContentNode } from './ContentNode.js';
 import { AttributeNode } from './AttributeNode.js';
 import { valuePattern, propPattern } from './patterns.js';
-import { deepEqual, protectProperty, valueToInt, removeSymbol, rendererSymbol } from './utilities.js';
+import { deepEqual, protectProperty, valueToInt, removeSymbol, rendererSymbol, nullProps } from './utilities.js';
 import { DirectiveNode } from './DirectiveNode.js';
 
 export class Template {
@@ -140,14 +140,9 @@ export class Template {
 
   [removeSymbol]() {
     this.nodes.forEach(templateChild => templateChild.parentNode.removeChild(templateChild));
-    this.nodes = null;
     this.parts
       .filter(part => part instanceof AttributeNode)
       .forEach(part => part.disconnect());
-    this.parts = null;
-    this.partIndicies = null;
-    this.context = null;
-    this.location = null;
-    this.group = null;
+    nullProps(this, ['nodes', 'parts', 'partIndicies', 'context', 'location', 'group']);
   }
 }

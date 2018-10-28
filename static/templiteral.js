@@ -72,6 +72,7 @@ const repeaterSymbol = Symbol('Repeater');
 const removeSymbol = Symbol('RemoveTemplate');
 const valueToInt = match => +match.replace(/(---!{)|(}!---)/gi, '');
 const toEventName = match => match.replace(/(\()|(\))/gi, '');
+const nullProps = (context, props) => props.forEach(prop => context[prop] = null);
 
 class ContentNode {
   constructor(node, compiler) {
@@ -365,15 +366,10 @@ class Template {
 
   [removeSymbol]() {
     this.nodes.forEach(templateChild => templateChild.parentNode.removeChild(templateChild));
-    this.nodes = null;
     this.parts
       .filter(part => part instanceof AttributeNode)
       .forEach(part => part.disconnect());
-    this.parts = null;
-    this.partIndicies = null;
-    this.context = null;
-    this.location = null;
-    this.group = null;
+    nullProps(this, ['nodes', 'parts', 'partIndicies', 'context', 'location', 'group']);
   }
 }
 
