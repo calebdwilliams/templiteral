@@ -3,15 +3,77 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 const valuePattern = /---!{.*?(}!---)/gi;
-
 const propPattern = /^\[.*\]$/;
-
-
-
 const matchPattern = /---!{\d+}!---/gi;
-const removeSymbol = Symbol('RemoveTemplate');
+
+const deepEqual = (a, b) => {
+  if (a === b) return true;
+    
+  if (a && b && typeof a == 'object' && typeof b == 'object') {
+    const arrA = Array.isArray(a);
+    const arrB = Array.isArray(b);
+    let i;
+    let length;
+    let key;
+        
+    if (arrA && arrB) {
+      length = a.length;
+      if (length != b.length) return false;
+      for (i = length; i-- !== 0;)
+        if (!deepEqual(a[i], b[i])) return false;
+      return true;
+    }
+        
+    if (arrA != arrB) return false;
+        
+    const dateA = a instanceof Date;
+    const dateB = b instanceof Date;
+    if (dateA != dateB) return false;
+    if (dateA && dateB) return a.getTime() == b.getTime();
+        
+    const regexpA = a instanceof RegExp;
+    const regexpB = b instanceof RegExp;
+    if (regexpA != regexpB) return false;
+    if (regexpA && regexpB) return a.toString() == b.toString();
+        
+    const keys = Object.keys(a);
+    length = keys.length;
+        
+    if (length !== Object.keys(b).length) return false;
+        
+    for (i = length; i-- !== 0;)
+      if (!Object.hasOwnProperty.call(b, keys[i])) return false;
+
+    for (i = length; i-- !== 0;) {
+      key = keys[i];
+      if (!deepEqual(a[key], b[key])) return false;
+    }
+
+    return true;
+  } else if (a && b && typeof a == 'function' && typeof b == 'function') {
+    // ignore functions for our purposes
+    return true;
+  }
+    
+  return a!==a && b!==b;
+};
+
+const protectProperty = (target, prop, value) => Object.defineProperty(target, prop, {
+  value,
+  enumerable: false,
+  configurable: false,
+  writable: false
+});
+
+const protectGet = (target, prop, get) => Object.defineProperty(target, prop, {
+  get,
+  configurable: false,
+  enumerable: false
+});
+
 const rendererSymbol = Symbol('Renderer');
 const repeaterSymbol = Symbol('Repeater');
+const removeSymbol = Symbol('RemoveTemplate');
 const valueToInt = match => +match.replace(/(---!{)|(}!---)/gi, '');
 const toEventName = match => match.replace(/(\()|(\))/gi, '');
 
@@ -108,58 +170,6 @@ class AttributeNode {
     });
   }
 }
-
-const deepEqual = (a, b) => {
-  if (a === b) return true;
-    
-  if (a && b && typeof a == 'object' && typeof b == 'object') {
-    const arrA = Array.isArray(a);
-    const arrB = Array.isArray(b);
-    let i;
-    let length;
-    let key;
-        
-    if (arrA && arrB) {
-      length = a.length;
-      if (length != b.length) return false;
-      for (i = length; i-- !== 0;)
-        if (!deepEqual(a[i], b[i])) return false;
-      return true;
-    }
-        
-    if (arrA != arrB) return false;
-        
-    const dateA = a instanceof Date;
-    const dateB = b instanceof Date;
-    if (dateA != dateB) return false;
-    if (dateA && dateB) return a.getTime() == b.getTime();
-        
-    const regexpA = a instanceof RegExp;
-    const regexpB = b instanceof RegExp;
-    if (regexpA != regexpB) return false;
-    if (regexpA && regexpB) return a.toString() == b.toString();
-        
-    const keys = Object.keys(a);
-    length = keys.length;
-        
-    if (length !== Object.keys(b).length) return false;
-        
-    for (i = length; i-- !== 0;)
-      if (!Object.hasOwnProperty.call(b, keys[i])) return false;
-
-    for (i = length; i-- !== 0;) {
-      key = keys[i];
-      if (!deepEqual(a[key], b[key])) return false;
-    }
-
-    return true;
-  } else if (a && b && typeof a == 'function' && typeof b == 'function') {
-    // ignore functions for our purposes
-    return true;
-  }
-    
-  return a!==a && b!==b;
-};
 
 class DirectiveNode {
   constructor(node, value, context, compiler, index) {
@@ -267,12 +277,7 @@ class Template {
     }
 
     if (!this.context[rendererSymbol]) {
-      Object.defineProperty(this, rendererSymbol, {
-        value: this,
-        enumerable: false,
-        configurable: false,
-        writable: false
-      });
+      protectProperty(this, rendererSymbol, this);
     }
   }
 
@@ -497,24 +502,14 @@ function templiteral(location = this, context = this) {
 
 function fragment(key) {
   return (strings, ...values) => {
-    Object.defineProperty(values, '$$key', {
-      value: key,
-      enumerable: false,
-      configurable: false,
-      writable: false
-    });
+    protectProperty(values, '$$key', key);
     return [strings, values];
   };
 }
 
 function condition(bool) {
   return (strings, ...values) => {
-    Object.defineProperty(values, '$$key', {
-      value: bool ? 'condition' : 'false',
-      enumerable: false,
-      configurable: false,
-      writable: false
-    });
+    protectProperty(values, '$$key', bool ? 'condition' : 'false');
     return bool ? [[strings, values]] : [[[], values]];
   };
 }
@@ -536,7 +531,6 @@ class Component extends HTMLElement {
       this.attachShadow(init);
     }
     const state = {};
-    const self = this;
     const attrs = new Set();
     const stateProxy = watch(state, (target, property, descriptor) => {
       try {
@@ -602,36 +596,10 @@ class Component extends HTMLElement {
       });
     });
     
-    Object.defineProperty(this, 'templiteral', {
-      get() {
-        const location = self.shadowRoot ? self.shadowRoot : self;
-        return templiteral(location, self);
-      },
-      configurable: false,
-      enumerable: false
-    });
-    
-    Object.defineProperty(this, 'html', {
-      get() {
-        return (...args) => Reflect.apply(self.templiteral, self, args);
-      },
-      configurable: false,
-      enumerable: false
-    });
-
-    Object.defineProperty(this, 'fragment', {
-      value: fragment,
-      configurable: false,
-      enumerable: false,
-      writable: false
-    });
-
-    Object.defineProperty(this, 'if', {
-      value: condition,
-      configurable: false,
-      enumerable: false,
-      writable: false
-    });
+    protectGet(this, 'templiteral', () => templiteral(this.shadowRoot ? this.shadowRoot : this, this));
+    protectGet(this, 'html', () => (...args) => Reflect.apply(this.templiteral, this, args));
+    protectProperty(this, 'fragment', fragment);
+    protectProperty(this, 'if', condition);
   }
 
   attributeChangedCallback(name, oldValue, newValue) {

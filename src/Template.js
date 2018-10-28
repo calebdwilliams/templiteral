@@ -1,7 +1,7 @@
 import { ContentNode } from './ContentNode.js';
 import { AttributeNode } from './AttributeNode.js';
-import { valuePattern, propPattern, valueToInt, removeSymbol, rendererSymbol } from './patterns.js';
-import { deepEqual } from './utilities.js';
+import { valuePattern, propPattern } from './patterns.js';
+import { deepEqual, protectProperty, valueToInt, removeSymbol, rendererSymbol } from './utilities.js';
 import { DirectiveNode } from './DirectiveNode.js';
 
 export class Template {
@@ -48,12 +48,7 @@ export class Template {
     }
 
     if (!this.context[rendererSymbol]) {
-      Object.defineProperty(this, rendererSymbol, {
-        value: this,
-        enumerable: false,
-        configurable: false,
-        writable: false
-      });
+      protectProperty(this, rendererSymbol, this);
     }
   }
 

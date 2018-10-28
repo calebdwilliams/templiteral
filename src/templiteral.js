@@ -1,5 +1,5 @@
 import { Template } from './Template.js';
-import { rendererSymbol, removeSymbol } from './patterns.js';
+import { protectProperty, protectGet, rendererSymbol, removeSymbol } from './utilities';
 import { StyleSheetRegistry } from '../node_modules/stylit/lib/stylit.js';
 
 const templateCache = new WeakMap();
@@ -28,24 +28,14 @@ export function templiteral(location = this, context = this) {
 
 export function fragment(key) {
   return (strings, ...values) => {
-    Object.defineProperty(values, '$$key', {
-      value: key,
-      enumerable: false,
-      configurable: false,
-      writable: false
-    });
+    protectProperty(values, '$$key', key);
     return [strings, values];
   };
 }
 
 export function condition(bool) {
   return (strings, ...values) => {
-    Object.defineProperty(values, '$$key', {
-      value: bool ? 'condition' : 'false',
-      enumerable: false,
-      configurable: false,
-      writable: false
-    });
+    protectProperty(values, '$$key', bool ? 'condition' : 'false');
     return bool ? [[strings, values]] : [[[], values]];
   };
 }
@@ -67,7 +57,6 @@ export class Component extends HTMLElement {
       this.attachShadow(init);
     }
     const state = {};
-    const self = this;
     const attrs = new Set();
     const stateProxy = watch(state, (target, property, descriptor) => {
       try {
@@ -133,36 +122,10 @@ export class Component extends HTMLElement {
       });
     });
     
-    Object.defineProperty(this, 'templiteral', {
-      get() {
-        const location = self.shadowRoot ? self.shadowRoot : self;
-        return templiteral(location, self);
-      },
-      configurable: false,
-      enumerable: false
-    });
-    
-    Object.defineProperty(this, 'html', {
-      get() {
-        return (...args) => Reflect.apply(self.templiteral, self, args);
-      },
-      configurable: false,
-      enumerable: false
-    });
-
-    Object.defineProperty(this, 'fragment', {
-      value: fragment,
-      configurable: false,
-      enumerable: false,
-      writable: false
-    });
-
-    Object.defineProperty(this, 'if', {
-      value: condition,
-      configurable: false,
-      enumerable: false,
-      writable: false
-    });
+    protectGet(this, 'templiteral', () => templiteral(this.shadowRoot ? this.shadowRoot : this, this));
+    protectGet(this, 'html', () => (...args) => Reflect.apply(this.templiteral, this, args));
+    protectProperty(this, 'fragment', fragment);
+    protectProperty(this, 'if', condition);
   }
 
   attributeChangedCallback(name, oldValue, newValue) {

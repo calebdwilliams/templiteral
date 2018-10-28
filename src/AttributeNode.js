@@ -1,4 +1,5 @@
-import { matchPattern, propPattern, valuePattern, toEventName, valueToInt } from './patterns.js';
+import { matchPattern, propPattern, valuePattern } from './patterns.js';
+import { toEventName, valueToInt } from './utilities.js';
 
 export class AttributeNode {
   constructor(node, boundAttrs, boundEvents, context, compiler) {

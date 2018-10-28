@@ -1,5 +1,5 @@
 import { Template } from './Template.js';
-import { removeSymbol, repeaterSymbol } from './patterns.js';
+import { removeSymbol, repeaterSymbol } from './utilities.js';
 
 export class DirectiveNode {
   constructor(node, value, context, compiler, index) {

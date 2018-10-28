@@ -1,12 +1,3 @@
 export const valuePattern = /---!{.*?(}!---)/gi;
-export const eventPattern = /^\(.*\)$/gi;
 export const propPattern = /^\[.*\]$/;
-export const sanitizePattern = /^this\./;
-export const startSeparator = /---!\{/gi;
-export const endSeparator = /\}!---/gi;
 export const matchPattern = /---!{\d+}!---/gi;
-export const removeSymbol = Symbol('RemoveTemplate');
-export const rendererSymbol = Symbol('Renderer');
-export const repeaterSymbol = Symbol('Repeater');
-export const valueToInt = match => +match.replace(/(---!{)|(}!---)/gi, '');
-export const toEventName = match => match.replace(/(\()|(\))/gi, '');

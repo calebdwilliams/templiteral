@@ -1,4 +1,5 @@
-import { matchPattern, valuePattern, valueToInt } from './patterns.js';
+import { matchPattern, valuePattern } from './patterns.js';
+import { valueToInt } from './utilities.js';
 
 export class ContentNode {
   constructor(node, compiler) {

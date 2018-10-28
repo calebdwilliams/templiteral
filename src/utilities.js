@@ -48,4 +48,23 @@ export const deepEqual = (a, b) => {
   }
     
   return a!==a && b!==b;
-}
+};
+
+export const protectProperty = (target, prop, value) => Object.defineProperty(target, prop, {
+  value,
+  enumerable: false,
+  configurable: false,
+  writable: false
+});
+
+export const protectGet = (target, prop, get) => Object.defineProperty(target, prop, {
+  get,
+  configurable: false,
+  enumerable: false
+});
+
+export const rendererSymbol = Symbol('Renderer');
+export const repeaterSymbol = Symbol('Repeater');
+export const removeSymbol = Symbol('RemoveTemplate');
+export const valueToInt = match => +match.replace(/(---!{)|(}!---)/gi, '');
+export const toEventName = match => match.replace(/(\()|(\))/gi, '');
