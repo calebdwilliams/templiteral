@@ -1,7 +1,6 @@
-
+/* global templit describe beforeEach afterEach it expect spyOn */
 let myEl;
 let elClass;
-let spy;
 
 // This necessarily takes time,
 // no need to factor that in to tests
@@ -40,7 +39,6 @@ describe('templiteral', () => {
     }
     elClass = MyEl;
     spyOn(elClass.prototype, 'onInit');
-    spy = eventName => spyOn(MyEl.prototype, eventName);
     if (!customElements.get('my-el')) {
       customElements.define('my-el', MyEl);
     }
@@ -94,7 +92,6 @@ describe('templiteral', () => {
       expect(reference).toBe(myEl.helloWho);
     });
     it('should add event listeners', () => {
-      spy('changeHelloWho');
       button.dispatchEvent(new Event('click'));
       expect(myEl.helloWho).toBe('Caleb');
     });
@@ -107,7 +104,8 @@ describe('templiteral', () => {
     it('should define refs', () => {
       expect(myEl.refs.button).toBeDefined();
     });
-  });
+    it('should call functions', () => {
 
-  
+    });
+  });
 });

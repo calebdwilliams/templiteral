@@ -1,4 +1,4 @@
-/* global templit describe beforeEach afterEach it expect */
+/* global templit describe beforeEach afterEach it expect spyOn */
 let component;
 const { Component } = templit;
 
@@ -29,6 +29,10 @@ describe('Component', () => {
         };
       }
 
+      log(event) {
+        console.log(event);
+      }
+
       todoChange(todo, completed) {
         todo.completed = completed;
       }
@@ -37,12 +41,13 @@ describe('Component', () => {
         this.html`
             <ul>
             ${this.state.todos
-.filter(todo => !todo.completed)
-.map(todo => this.fragment(todo.title)`
+    .filter(todo => !todo.completed)
+    .map(todo => this.fragment(todo.title)`
                     <to-do [title]="${todo.title}" [completed]="${todo.completed}" (todo-change)="${event => this.todoChange(todo, event.detail.checked)}"></to-do>
                 `)
 }
             </ul>
+            <button ref="log" (click)="${this.log}">Log event</button>
             <button ref="button" (click)="${event => this.emit('test-event', { event })}">Click me</button>
         `;
       }

@@ -51,11 +51,8 @@ export class Component extends HTMLElement {
   static get observedAttributes() { return [...this.boundAttributes]; }
   static get booleanAttributes() { return []; }
   
-  constructor(init) {
+  constructor() {
     super();
-    if (init) {
-      this.attachShadow(init);
-    }
     const state = {};
     const attrs = new Set();
     const stateProxy = watch(state, (target, property, descriptor) => {
@@ -67,7 +64,7 @@ export class Component extends HTMLElement {
             this.setAttribute(property, descriptor.value);
           }
         }
-        this.render.bind(this)();
+        this.render();
       } catch (err) {
         console.log(err);
       }
@@ -147,15 +144,11 @@ export class Component extends HTMLElement {
     });
   }
 
-  get $$renderListener() {
-    return this.render;
-  }
-  
   connectedCallback() {
     this.render();
 
     if (!this.$$listening) {
-      this.addEventListener('ComponentRender', this.$$renderListener);
+      this.addEventListener('ComponentRender', this.render);
     }
 
     if (this.constructor.hasStyles(this.tagName.toLowerCase())) {
@@ -168,15 +161,13 @@ export class Component extends HTMLElement {
   
   disconnectedCallback() {
     templateCache.delete(this);
-    this.removeEventListener('ComponentRender', this.$$renderListener);
+    this.removeEventListener('ComponentRender', this.render);
     this.$$listening = false;
     this[rendererSymbol] && this[rendererSymbol][removeSymbol]();
     this.onDestroy();
   }
 
-  onInit() {}
-  onDestroy() {}
-
+  
   emit(eventName, detail) {
     this.dispatchEvent(new CustomEvent(eventName, { 
       bubbles: true,
@@ -184,7 +175,9 @@ export class Component extends HTMLElement {
       detail 
     }));
   }
-
+  
+  onInit() {}
+  onDestroy() {}
   render() {}
 }
 
