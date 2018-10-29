@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.6.4"></a>
+## [3.6.4](https://github.com/calebdwilliams/templiteral/compare/v3.6.3...v3.6.4) (2018-10-29)
+
+
+
 <a name="3.6.3"></a>
 ## [3.6.3](https://github.com/calebdwilliams/templiteral/compare/v3.6.2...v3.6.3) (2018-10-29)
 
