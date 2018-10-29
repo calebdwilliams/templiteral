@@ -523,6 +523,7 @@ class Component extends HTMLElement {
     super();
     const state = {};
     const attrs = new Set();
+    const updatedHooks = new Map();
     const stateProxy = watch(state, (target, property, descriptor) => {
       try {
         if (this.constructor.boundAttributes.includes(property)) {
@@ -582,13 +583,17 @@ class Component extends HTMLElement {
           if (this.isConnected && attrs.size === currentArray.length) {
             this.render();
           }
+          if (this.updatedHooks.has(attr) && this.$$listening) {
+            this.updatedHooks.get(attr).apply(this, [value, attr]);
+          }
           attrs.add(attr);
         }
       });
     });
-    
+
     protectGet(this, 'templiteral', () => templiteral(this.shadowRoot ? this.shadowRoot : this, this));
     protectGet(this, 'html', () => (...args) => Reflect.apply(this.templiteral, this, args));
+    protectProperty(this, 'updatedHooks', updatedHooks);
     protectProperty(this, 'fragment', fragment);
     protectProperty(this, 'if', condition);
   }

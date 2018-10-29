@@ -12,6 +12,8 @@ export class TodoItem extends Component {
       title: this.getAttribute('title'),
       completed: this.hasAttribute('completed')
     };
+
+    this.updatedHooks.set('completed', this.toggleComplete);
   }
   
   deleteTodo() {
@@ -21,6 +23,10 @@ export class TodoItem extends Component {
   toggle(event) {
     event.preventDefault();
     this.state.edit = !this.state.edit;
+  }
+
+  toggleComplete(value, attr) {
+    console.log({el: this, value, attr});
   }
   
   toggleTodo(event) {

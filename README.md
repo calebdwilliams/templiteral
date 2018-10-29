@@ -165,6 +165,28 @@ this.username = this.refs.username.value;
 
 If you intend to perform some action on element references, it is probably best to use the `onInit` lifecycle method described above.
 
+## Property updated hooks
+
+When a property is updated, often a developer will want to be notified. This is accomplished using the `Component.prototype.updatedHooks` API. `updatedHooks` is a [JavaScript Map object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) that takes a property name and a callback function with the argument signature of `value: any, attributeName: string`. This callback _will not_ be called on the initial setting of the property value, but will be called on all subsequent calls to the property's setter.
+
+```javascript
+import { Component } from 'templiteral'; 
+class MyEl extends Component {
+  static get boundAttributes() { return ['title']; }
+  constructor() {
+    super();
+
+    this.updatedHooks.set('title', this._titleUpdated);
+  }
+
+  render() { /** Omitted */ }
+
+  _titleUpdated(newTitle, attributeName) {
+    /** Omitted */
+  }
+}
+```
+
 ### Array templates
 
 Loops are created using the built-in `Array` prototype methods and the use of the `fragment` function. `fragment` takes in a unique key for each element in the array. Normally, the item's index should suffice, but in cases where there will be significant re-rendering, something else might be necessary.
