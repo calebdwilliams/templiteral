@@ -18,7 +18,7 @@
     "component",
     "template engine"
   ],
-  "version": "3.6.2",
+  "version": "3.6.3",
   "description": "",
   "main": "dist/templiteral.min.js",
   "module": "dist/templiteral.es.min.js",
