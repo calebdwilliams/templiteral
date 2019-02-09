@@ -1,4 +1,5 @@
 import { Component } from '../../templiteral.js';
+import { todoFooterStyles } from './styles.js';
 
 export class TodoFooter extends Component {
   static get boundAttributes() { return ['filter', 'remaining']; }
@@ -6,6 +7,7 @@ export class TodoFooter extends Component {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    this.shadowRoot.adoptedStyleSheets = [todoFooterStyles];
 
     this.state = {
       filter: this.getAttribute('filter') || 'all',

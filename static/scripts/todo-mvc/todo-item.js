@@ -1,4 +1,5 @@
 import { Component } from '../../templiteral.js';
+import { todoItemStyles } from './styles.js';
 
 export class TodoItem extends Component {
   static get boundAttributes() { return ['title', 'completed', 'edit']; }
@@ -12,7 +13,7 @@ export class TodoItem extends Component {
       title: this.getAttribute('title'),
       completed: this.hasAttribute('completed')
     };
-
+    this.shadowRoot.adoptedStyleSheets = [todoItemStyles];
     this.updatedHooks.set('completed', this.toggleComplete);
   }
   

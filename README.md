@@ -225,43 +225,30 @@ ${this.if(this.showTodos)`
 `}
 ```
 
-## Styling Component
+## Styling components
 
-There are two primary ways of styling `Component` instances. The first and most obvious is to simply use a `<style>` tag inside of your render callback. If, however, you would prefer to keep your markup and style declarations independent, you can use Component's static `defineStyles` method. The method takes two arguments: `tagName:string, styleText:string`.
+The previous method of styling components from version 3.x.x has been deprecated in favor of implementing the [constructible style sheets/adopted style sheets proposal](https://github.com/WICG/construct-stylesheets/blob/gh-pages/explainer.md). This package currently consumes the [construct style sheets polyfill](https://www.npmjs.com/package/construct-style-sheets-polyfill) to aid in styling components inside shadow roots.
 
 ```javascript
 import { Component } from 'templiteral';
 
-class StyleExample extends Component {
+/** Construct a new style sheet */
+const exampleStyles = new CSSStyleSheet();
+
+/** Replace the contents of the style sheet */
+exampleStyles.replace('* { color: tomato; }')
+  .then(console.log);
+
+class StyleExample extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    /** Adopt the style sheet */
+    this.shadowRoot.adoptedStyleSheets = [exampleStyles];
   }
 
   render() {
-    this.html`<h1>This content will be the color tomato</h1>`;
+    this.html`<h1>Hello world, this is tomato colored</h1>`;
   }
 }
-
-Component.defineStyles('style-example', `
-  * { color: tomato; }
-`);
-
-customElements.define('style-example', StyleExample);
-```
-
-Any element will only assume the styles associated with it's tag name, so any custom extensions can be manually adopted:
-
-```javascript
-class OtherExample extends StyleExample {
-  onInit() {
-    this.constructor.adoptStyles(this.shadowRoot, 'style-example');
-  }
-}
-```
-
-You can also asynchronously load styles without affecting the parent document using `Component.loadStyles`, which takes a tag name and a URL to load. However, if you wish to use this with a root component, you may experience a flash of unstyled content. Styles loaded using this method will be immediately fetched, and the resultant style text will only affect the adopting components.
-
-```javascript
-Component.loadStyles('tag-name', '/styles/tagName.css');
 ```

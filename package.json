@@ -36,7 +36,7 @@
   },
   "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
-    "stylit": "^0.3.0"
+    "construct-style-sheets-polyfill": "^1.0.1"
   },
   "devDependencies": {
     "body-parser": "^1.18.3",

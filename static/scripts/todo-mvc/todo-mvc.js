@@ -1,4 +1,6 @@
 import { Component } from '../templiteral.js';
+import { todoMVCStyles } from './styles.js';
+
 import './create-todo.js';
 import './todo-item.js';
 import './todo-footer.js';
@@ -21,6 +23,7 @@ export class TodoMVC extends Component {
       }],
       filter: this.getAttribute('filter') || 'all'
     };
+    document.adoptedStyleSheets = [todoMVCStyles];
   }
 
   get all() {

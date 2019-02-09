@@ -1,6 +1,9 @@
-import { Component } from '../../templiteral.js';
+export const todoFooterStyles = new CSSStyleSheet();
+export const todoItemStyles = new CSSStyleSheet();
+export const createTodoStyles = new CSSStyleSheet();
+export const todoMVCStyles = new CSSStyleSheet();
 
-Component.defineStyles('todo-footer', `.todo-footer {
+todoFooterStyles.replace(`.todo-footer {
   display: flex;
   justify-content: space-between;
   padding: 10px 15px;
@@ -51,7 +54,7 @@ Component.defineStyles('todo-footer', `.todo-footer {
   outline: 0;
 }`);
 
-Component.defineStyles('todo-item', `
+todoItemStyles.replace(`
 :host {
     background: #fff;
     border-bottom: 1px solid #ededed;
@@ -128,7 +131,7 @@ Component.defineStyles('todo-item', `
   }
 `);
 
-Component.defineStyles('create-todo', `
+createTodoStyles.replace(`
 :host {
     background: #fff;
     display: block;
@@ -168,7 +171,7 @@ input::placeholder {
     color: #121212;
 }`);
 
-Component.defineStyles('todo-mvc', `todo-mvc {
+todoMVCStyles.replace(`todo-mvc {
   background: #fff;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 25px 50px 0 rgba(0, 0, 0, 0.1);
   display: block;

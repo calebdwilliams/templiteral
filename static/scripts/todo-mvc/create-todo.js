@@ -1,9 +1,11 @@
 import { Component } from '../../templiteral.js';
+import { createTodoStyles } from './styles.js';
 
 export class CreateTodo extends Component {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    this.shadowRoot.adoptedStyleSheets = [createTodoStyles];
   }
 
   clearAll(event) {

@@ -72,4 +72,18 @@ export class AttributeNode {
       }
     });
   }
+
+  _updateAttribute(attribute, attributeValue) {
+    if (attributeValue && (attributeValue !== 'false' && attributeValue !== 'undefined')) {
+      this.node.setAttribute(attribute.name, attributeValue);
+    } else {
+      this.node.removeAttribute(attribute.name);
+    }
+  }
+
+  _updateProp(attribute, attributeValue) {
+    const attributeName = attribute.cleanName;
+    this.node[attributeName] = attributeValue;
+    this.context.DEBUG ? null : this.node.removeAttribute(attribute.name);
+  }
 }

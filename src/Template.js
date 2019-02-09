@@ -45,6 +45,10 @@ export class Template {
       }
     } else {
       this.location.appendChild(node);
+      Promise.resolve()
+        .then(() => {
+          this.location.adoptedStyleSheets = this.location.adoptedStyleSheets;
+        });
     }
 
     if (!this.context[rendererSymbol]) {
