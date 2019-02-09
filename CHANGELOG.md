@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="4.0.0"></a>
+# [4.0.0](https://github.com/calebdwilliams/templiteral/compare/v3.7.0...v4.0.0) (2019-02-09)
+
+
+### Features
+
+* **construct-style-sheets:** Added the construct style sheets polyfill and deprecated stylit ([18530f9](https://github.com/calebdwilliams/templiteral/commit/18530f9))
+
+
+### BREAKING CHANGES
+
+* **construct-style-sheets:** Deprecated stylit
+
+
+
 <a name="3.7.0"></a>
 # [3.7.0](https://github.com/calebdwilliams/templiteral/compare/v3.6.4...v3.7.0) (2018-10-29)
 
