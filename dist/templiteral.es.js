@@ -70,6 +70,7 @@ const protectGet = (target, prop, get) => Object.defineProperty(target, prop, {
 const rendererSymbol = Symbol('Renderer');
 const repeaterSymbol = Symbol('Repeater');
 const removeSymbol = Symbol('RemoveTemplate');
+const templateSymbol = Symbol();
 const valueToInt = match => +match.replace(/(---!{)|(}!---)/gi, '');
 const toEventName = match => match.replace(/(\()|(\))/gi, '');
 const nullProps = (context, props) => props.forEach(prop => context[prop] = null);
@@ -164,6 +165,20 @@ class AttributeNode {
         this.updateProperty(attribute, attributeValue);
       }
     });
+  }
+
+  _updateAttribute(attribute, attributeValue) {
+    if (attributeValue && (attributeValue !== 'false' && attributeValue !== 'undefined')) {
+      this.node.setAttribute(attribute.name, attributeValue);
+    } else {
+      this.node.removeAttribute(attribute.name);
+    }
+  }
+
+  _updateProp(attribute, attributeValue) {
+    const attributeName = attribute.cleanName;
+    this.node[attributeName] = attributeValue;
+    this.context.DEBUG ? null : this.node.removeAttribute(attribute.name);
   }
 }
 
@@ -270,6 +285,10 @@ class Template {
       }
     } else {
       this.location.appendChild(node);
+      Promise.resolve()
+        .then(() => {
+          this.location.adoptedStyleSheets = this.location.adoptedStyleSheets;
+        });
     }
 
     if (!this.context[rendererSymbol]) {
@@ -293,8 +312,11 @@ class Template {
   }
 
   _createNode(baseText) {
-    const fragment = document.createElement('template');
-    fragment.innerHTML = baseText;
+    let fragment = this[templateSymbol];
+    if (!fragment) {
+      fragment = document.createElement('template');
+      fragment.innerHTML = baseText;
+    }
     return document.importNode(fragment.content, true);
   }
 
@@ -372,103 +394,158 @@ class Template {
   }
 }
 
-class StyleSheetRegistry {
-  constructor() {      
-    this.adopters = new WeakMap();
-    this.registry = new Map();
-    this.observer = new MutationObserver(mutationsList => {
-      mutationsList.forEach(mutation => {
-        [...mutation.removedNodes].forEach(node => {
-          if (this.adopters.has(node)) {
-            this.adopters.delete(node);
-          } else if (this.adopters.has(node.shadowRoot)) {
-            this.adopters.delete(node.shadowRoot);
+(function() {
+  'use strict';
+
+  const supportsAdoptedStyleSheets = 'adoptedStyleSheets' in document;  
+  
+  if (!supportsAdoptedStyleSheets) {
+    function replaceSync(contents) {
+      if (this[node]) {
+        this[node]._sheet.innerHTML = contents;
+        updateAdopters(this);
+        return this[node]._sheet.sheet;
+      } else {
+        throw new TypeError('replaceSync can only be called on a constructed style sheet');
+      }
+    }
+
+    function replace(contents) {
+      return new Promise((resolve, reject) => {
+        if (this[node]) {
+          this[node]._sheet.innerHTML = contents;
+          resolve(this[node]._sheet.sheet);
+          updateAdopters(this);
+        } else {
+          reject('replace can only be called on a constructed style sheet');
+        }
+      });
+    }
+
+    const node = Symbol('constructible style sheets');
+    const constructed = Symbol('constructed');
+    const obsolete = Symbol('obsolete');
+    const iframe = document.createElement('iframe');
+    const mutationCallback = mutations => {
+      mutations.forEach(mutation => {
+        const { addedNodes, removedNodes } = mutation;
+        removedNodes.forEach(removed => {
+          if (removed[constructed] && !removed[obsolete]) {
+            setTimeout(() => {
+              removed[constructed].appendChild(removed);
+            });
+          }
+        });
+        
+        addedNodes.forEach(added => {
+          const { shadowRoot } = added;
+          if (shadowRoot && shadowRoot.adoptedStyleSheets) {
+            shadowRoot.adoptedStyleSheets.forEach(adopted => {
+              shadowRoot.appendChild(adopted[node]._sheet);
+            });
           }
         });
       });
-    });
+    };
+    const observer = new MutationObserver(mutationCallback);
+    observer.observe(document.body, { childList: true });
+    iframe.hidden = true;
+    document.body.appendChild(iframe);
     
-    this.observer.observe(document.body, {
-      childList: true
-    });
-    
-    this._error = Symbol('error');
-    this._pending = Symbol('pending');
-    
-    this.pending = new Set();
-  }
+    const appendContent = (location, sheet) => {
+      const clone = sheet[node]._sheet.cloneNode(true);
+      location.body ? location = location.body : null;
+      clone[constructed] = location;  
+      sheet[node]._adopters.push({ location, clone });
+      location.appendChild(clone);
+      return clone;
+    };
 
-  adopt(node, name) {
-    const fromNode = this.adopters.get(node) || new Map();
-    if (!fromNode.size) {
-      this.adopters.set(node, fromNode);
-    }
-    if (!fromNode.has(name) && this.get(name) !== this._pending) {
-      const sheet = this.get(name);
-      node.appendChild(sheet);
-      fromNode.set(name, sheet);
-      return Promise.resolve(sheet);
-    } else if (this.get(name) === this._pending) {
-      return new Promise((resolve, reject) => {
-        const interval = window.setInterval(() => {
-          if (this.get(name)) {
-            const sheet = this.get(name);
-            if (sheet !== this._error && sheet !== this._pending) {
-              node.appendChild(sheet);
-              fromNode.set(name, sheet);
-              resolve(sheet);
-              window.clearInterval(interval);
-            } else if (sheet === this._error) {
-              reject();
-              window.clearInterval(interval);
-            }
-          }
-        }, 200);
+    const updateAdopters = sheet => {
+      sheet[node]._adopters.forEach(adopter => {
+        adopter.clone.innerHTML = sheet[node]._sheet.innerHTML;
       });
-    } else {
-      return Promise.resolve(fromNode.get(name));
-    }
-  }
-
-  createSheet(textContent) {
-    const sheet = document.createElement('style');
-    sheet.textContent = textContent;
-    return sheet;
-  }
-
-  define(name, value) {
-    this.registry.set(name, value);
-    return Promise.resolve({name});
-  }
-
-  get(name) {
-    if (this.registry.get(name)) {
-      const cssText = this.registry.get(name);
-      if (cssText === this._pending || cssText === this._error) {
-        return cssText;
+    };
+    
+    const onShadowRemoval = (root, observer) => event => {
+      const shadowRoot = event.target.shadowRoot;
+      if (shadowRoot && shadowRoot.adoptedStyleSheets.length) {
+        const adoptedStyleSheets = shadowRoot.adoptedStyleSheets;
+        adoptedStyleSheets
+          .map(sheet => sheet[node])
+          .map(sheet => {
+          sheet._adopters = sheet._adopters.filter(adopter => adopter.location !== shadowRoot);
+        });
       }
-      return this.createSheet(cssText);  
-    } else {
-      throw new Error(``)
+      observer.disconnect();
+    };
+
+    class _StyleSheet {
+      constructor() {
+        this._adopters = [];
+        const style = document.createElement('style');
+        iframe.contentWindow.document.body.appendChild(style);
+        this._sheet = style;
+        style.sheet[node] = this;
+        if (!style.sheet.constructor.prototype.replace) {
+          style.sheet.constructor.prototype.replace = replace;
+          style.sheet.constructor.prototype.replaceSync = replaceSync;
+        }
+        return style.sheet;
+      }
     }
+
+    StyleSheet.prototype.replace = replace;
+    CSSStyleSheet.prototype.replace = replace;
+
+    CSSStyleSheet.prototype.replaceSync = replaceSync;
+    StyleSheet.prototype.replaceSync = replaceSync;
+
+    window.CSSStyleSheet = _StyleSheet;
+    const adoptedStyleSheetsConfig = {
+      get() {
+          return this._adopted || [];
+      },
+      set(sheets) {
+        const location = this.body ? this.body : this;
+        this._adopted = this._adopted || [];
+        const observer = new MutationObserver(mutationCallback);
+        observer.observe(this, { childList: true });
+        if (!Array.isArray(sheets)) {
+          throw new TypeError('Adopted style sheets must be an Array');
+        }
+        sheets.forEach(sheet => {
+          if (!sheet instanceof CSSStyleSheet) {
+            throw new TypeError('Adopted style sheets must be of type CSSStyleSheet');
+          }
+        });
+        const uniqueSheets = [...new Set(sheets)];
+        const removedSheets = this._adopted.filter(sheet => !uniqueSheets.includes(sheet));
+        removedSheets.forEach(sheet => {
+          const styleElement = sheet[node]._adopters.filter(adopter => adopter.location === location)[0].clone;
+          styleElement[obsolete] = true;
+          styleElement.parentNode.removeChild(styleElement);
+        });
+        this._adopted = uniqueSheets;
+        
+        if (this.isConnected) {
+          sheets.forEach(sheet => {
+            appendContent(this, sheet);
+          });
+        }
+        
+        const removalListener = onShadowRemoval(this, observer);
+        this[removalListener] = removalListener;
+        this.addEventListener('DOMNodeRemoved', removalListener, true);
+      }
+    };
+
+    Object.defineProperty(ShadowRoot.prototype, 'adoptedStyleSheets', adoptedStyleSheetsConfig);
+    Object.defineProperty(document, 'adoptedStyleSheets', adoptedStyleSheetsConfig);
   }
-  
-  load(name, url, config) {
-    this.registry.set(name, this._pending);
-    return fetch(url, config)
-      .then(response => response.text())
-      .then(styleText => {
-        this.define(name, styleText);
-        return name;
-      })
-      .catch(error => {
-        this.define(name, this._error);
-      });
-  }
-}
+}(undefined));
 
 const templateCache = new WeakMap();
-const styleRegistry = new StyleSheetRegistry();
 
 function templiteral(location = this, context = this) {
   location.shadowRoot ? location = location.shadowRoot : null;
@@ -506,11 +583,6 @@ function condition(bool) {
 }
 
 class Component extends HTMLElement {
-  static get styles() { return styleRegistry; }
-  static get defineStyles() { return this.styles.define.bind(styleRegistry); }
-  static get hasStyles() { return this.styles.registry.has.bind(styleRegistry.registry); }
-  static get loadStyles() { return this.styles.load.bind(styleRegistry); }
-  static get adoptStyles() { return this.styles.adopt.bind(styleRegistry); }
   static get boundAttributes() { return []; }
   static get boundProps() { return []; }
   static get observedAttributes() { return [...this.boundAttributes]; }
@@ -619,10 +691,6 @@ class Component extends HTMLElement {
 
     if (!this.$$listening) {
       this.addEventListener('ComponentRender', this.render);
-    }
-
-    if (this.constructor.hasStyles(this.tagName.toLowerCase())) {
-      this.constructor.adoptStyles(this.shadowRoot ? this.shadowRoot : this, this.tagName.toLowerCase());
     }
     
     this.$$listening = true;

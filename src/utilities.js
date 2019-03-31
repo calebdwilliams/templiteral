@@ -66,6 +66,7 @@ export const protectGet = (target, prop, get) => Object.defineProperty(target, p
 export const rendererSymbol = Symbol('Renderer');
 export const repeaterSymbol = Symbol('Repeater');
 export const removeSymbol = Symbol('RemoveTemplate');
+export const templateSymbol = Symbol();
 export const valueToInt = match => +match.replace(/(---!{)|(}!---)/gi, '');
 export const toEventName = match => match.replace(/(\()|(\))/gi, '');
 export const nullProps = (context, props) => props.forEach(prop => context[prop] = null);

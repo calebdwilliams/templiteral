@@ -12,5 +12,19 @@
     <my-el></my-el>
     <noscript>Yeah, that's not really going to fly here.</noscript>
   </main>
+  <template>
+    <script>
+      console.log('hello worlsdfsdfd');
+    </script>
+    <style>
+      * { color: tomato; }
+    </style>
+    <h1>Hello world</h1>
+  </template>
+  <script>
+    const template = document.querySelector('template');
+    const node = document.importNode(template.content, true);
+    document.body.appendChild(node);
+  </script>
 </body>
 </html>

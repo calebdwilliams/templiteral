@@ -70,6 +70,7 @@ const protectGet = (target, prop, get) => Object.defineProperty(target, prop, {
 const rendererSymbol = Symbol('Renderer');
 const repeaterSymbol = Symbol('Repeater');
 const removeSymbol = Symbol('RemoveTemplate');
+const templateSymbol = Symbol();
 const valueToInt = match => +match.replace(/(---!{)|(}!---)/gi, '');
 const toEventName = match => match.replace(/(\()|(\))/gi, '');
 const nullProps = (context, props) => props.forEach(prop => context[prop] = null);
@@ -311,8 +312,11 @@ class Template {
   }
 
   _createNode(baseText) {
-    const fragment = document.createElement('template');
-    fragment.innerHTML = baseText;
+    let fragment = this[templateSymbol];
+    if (!fragment) {
+      fragment = document.createElement('template');
+      fragment.innerHTML = baseText;
+    }
     return document.importNode(fragment.content, true);
   }
 

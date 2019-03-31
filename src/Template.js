@@ -1,7 +1,7 @@
 import { ContentNode } from './ContentNode.js';
 import { AttributeNode } from './AttributeNode.js';
 import { valuePattern, propPattern } from './patterns.js';
-import { deepEqual, protectProperty, valueToInt, removeSymbol, rendererSymbol, nullProps } from './utilities.js';
+import { deepEqual, protectProperty, valueToInt, removeSymbol, rendererSymbol, nullProps, templateSymbol } from './utilities.js';
 import { DirectiveNode } from './DirectiveNode.js';
 
 export class Template {
@@ -72,8 +72,11 @@ export class Template {
   }
 
   _createNode(baseText) {
-    const fragment = document.createElement('template');
-    fragment.innerHTML = baseText;
+    let fragment = this[templateSymbol];
+    if (!fragment) {
+      fragment = document.createElement('template');
+      fragment.innerHTML = baseText;
+    }
     return document.importNode(fragment.content, true);
   }
 
