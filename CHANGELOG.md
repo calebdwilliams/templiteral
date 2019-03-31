@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="4.0.1"></a>
+## [4.0.1](https://github.com/calebdwilliams/templiteral/compare/v4.0.0...v4.0.1) (2019-03-31)
+
+
+### Bug Fixes
+
+* **Template:** Improved performance of template renderer ([ad1abfe](https://github.com/calebdwilliams/templiteral/commit/ad1abfe))
+
+
+
 <a name="4.0.0"></a>
 # [4.0.0](https://github.com/calebdwilliams/templiteral/compare/v3.7.0...v4.0.0) (2019-02-09)
 
