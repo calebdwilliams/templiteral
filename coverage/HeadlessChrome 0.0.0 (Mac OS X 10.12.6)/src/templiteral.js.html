@@ -20,24 +20,24 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">68.26% </span>
+        <span class="strong">69.47% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>329/482</span>
+        <span class='fraction'>330/475</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">59.11% </span>
+        <span class="strong">59.59% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>146/247</span>
+        <span class='fraction'>146/245</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">76% </span>
+        <span class="strong">74.51% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>38/50</span>
+        <span class='fraction'>38/51</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">69.33% </span>
+        <span class="strong">70.34% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>312/450</span>
+        <span class='fraction'>313/445</span>
       </div>
     </div>
   </div>
@@ -810,14 +810,7 @@
 765
 766
 767
-768
-769
-770
-771
-772
-773
-774
-775</td><td class="line-coverage quiet"><span class="cline-any cline-yes">1×</span>
+768</td><td class="line-coverage quiet"><span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
@@ -1224,6 +1217,13 @@
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1269,25 +1269,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1297,9 +1278,18 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1355,10 +1345,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1908,7 +1894,7 @@ class Template {
   }
 &nbsp;
   _createNode(baseText) {
-    let fragment = this[templateSymbol];
+    let fragment = this.context.constructor[templateSymbol];
     <span class="missing-if-branch" title="else path not taken" >E</span>if (!fragment) {
       fragment = document.createElement('template');
       fragment.innerHTML = baseText;
@@ -1996,7 +1982,14 @@ class Template {
   const supportsAdoptedStyleSheets = 'adoptedStyleSheets' in document;  
   
   <span class="missing-if-branch" title="if path not taken" >I</span>if (!supportsAdoptedStyleSheets) {
+<span class="fstat-no" title="function not covered" >    function hasImports(content) {</span>
+<span class="cstat-no" title="statement not covered" >      return content.replace(/\s/g, '').match(/\@import/);</span>
+    }
+&nbsp;
 <span class="fstat-no" title="function not covered" >    function replaceSync(contents) {</span>
+<span class="cstat-no" title="statement not covered" >      if (hasImports(contents)) {</span>
+<span class="cstat-no" title="statement not covered" >        throw new Error('@import is not allowed when using CSSStyleSheet\'s replaceSync method');</span>
+      }
 <span class="cstat-no" title="statement not covered" >      if (this[node]) {</span>
 <span class="cstat-no" title="statement not covered" >        this[node]._sheet.innerHTML = contents;</span>
 <span class="cstat-no" title="statement not covered" >        updateAdopters(this);</span>
@@ -2043,11 +2036,14 @@ class Template {
         });
       });
     };
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    const observer = new MutationObserver(mutationCallback);</span>
 <span class="cstat-no" title="statement not covered" >    observer.observe(document.body, { childList: true });</span>
 <span class="cstat-no" title="statement not covered" >    iframe.hidden = true;</span>
 <span class="cstat-no" title="statement not covered" >    document.body.appendChild(iframe);</span>
-    
+<span class="cstat-no" title="statement not covered" >    const frameBody = iframe.contentWindow.document.body;</span>
+<span class="cstat-no" title="statement not covered" >    document.body.removeChild(iframe);</span>
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    const appendContent = (location, sheet) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      const clone = sheet[node]._sheet.cloneNode(true);</span>
 <span class="cstat-no" title="statement not covered" >      location.body ? location = location.body : null;</span>
@@ -2062,25 +2058,12 @@ class Template {
 <span class="cstat-no" title="statement not covered" >        adopter.clone.innerHTML = sheet[node]._sheet.innerHTML;</span>
       });
     };
-    
-<span class="cstat-no" title="statement not covered" >    const onShadowRemoval = (root, observer) =&gt; <span class="cstat-no" title="statement not covered" >event =&gt; {</span></span>
-<span class="cstat-no" title="statement not covered" >      const shadowRoot = event.target.shadowRoot;</span>
-<span class="cstat-no" title="statement not covered" >      if (shadowRoot &amp;&amp; shadowRoot.adoptedStyleSheets.length) {</span>
-<span class="cstat-no" title="statement not covered" >        const adoptedStyleSheets = shadowRoot.adoptedStyleSheets;</span>
-<span class="cstat-no" title="statement not covered" >        adoptedStyleSheets</span>
-          .map(sheet =&gt; <span class="cstat-no" title="statement not covered" >sheet[node])</span>
-          .map(sheet =&gt; {
-<span class="cstat-no" title="statement not covered" >          sheet._adopters = sheet._adopters.filter(adopter =&gt; <span class="cstat-no" title="statement not covered" >adopter.location !== shadowRoot)</span>;</span>
-        });
-      }
-<span class="cstat-no" title="statement not covered" >      observer.disconnect();</span>
-    };
 &nbsp;
     class _StyleSheet {
       constructor<span class="fstat-no" title="function not covered" >() {</span>
 <span class="cstat-no" title="statement not covered" >        this._adopters = [];</span>
 <span class="cstat-no" title="statement not covered" >        const style = document.createElement('style');</span>
-<span class="cstat-no" title="statement not covered" >        iframe.contentWindow.document.body.appendChild(style);</span>
+<span class="cstat-no" title="statement not covered" >        frameBody.appendChild(style);</span>
 <span class="cstat-no" title="statement not covered" >        this._sheet = style;</span>
 <span class="cstat-no" title="statement not covered" >        style.sheet[node] = this;</span>
 <span class="cstat-no" title="statement not covered" >        if (!style.sheet.constructor.prototype.replace) {</span>
@@ -2129,15 +2112,11 @@ class Template {
 <span class="cstat-no" title="statement not covered" >            appendContent(this, sheet);</span>
           });
         }
-        
-<span class="cstat-no" title="statement not covered" >        const removalListener = onShadowRemoval(this, observer);</span>
-<span class="cstat-no" title="statement not covered" >        this[removalListener] = removalListener;</span>
-<span class="cstat-no" title="statement not covered" >        this.addEventListener('DOMNodeRemoved', removalListener, true);</span>
       }
     };
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    Object.defineProperty(ShadowRoot.prototype, 'adoptedStyleSheets', adoptedStyleSheetsConfig);</span>
-<span class="cstat-no" title="statement not covered" >    Object.defineProperty(document, 'adoptedStyleSheets', adoptedStyleSheetsConfig);</span>
+<span class="cstat-no" title="statement not covered" >    Object.defineProperty(Document.prototype, 'adoptedStyleSheets', adoptedStyleSheetsConfig);</span>
   }
 }(undefined));
 &nbsp;
@@ -2371,7 +2350,7 @@ return exports;
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sun Mar 31 2019 12:57:29 GMT-0500 (CDT)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu May 02 2019 21:26:03 GMT-0500 (CDT)
 </div>
 </div>
 <script src="../prettify.js"></script>

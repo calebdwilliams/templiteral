@@ -72,7 +72,7 @@ export class Template {
   }
 
   _createNode(baseText) {
-    let fragment = this[templateSymbol];
+    let fragment = this.context.constructor[templateSymbol];
     if (!fragment) {
       fragment = document.createElement('template');
       fragment.innerHTML = baseText;

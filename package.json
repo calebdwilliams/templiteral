@@ -1,6 +1,12 @@
 {
   "name": "templiteral",
   "author": "Caleb D. Williams <caleb.d.williams@gmail.com>",
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE.md"
+  ],
   "keywords": [
     "template literal",
     "template string",
@@ -36,7 +42,7 @@
   },
   "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
-    "construct-style-sheets-polyfill": "^1.0.1"
+    "construct-style-sheets-polyfill": "^1.0.3"
   },
   "devDependencies": {
     "body-parser": "^1.18.3",

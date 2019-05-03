@@ -312,7 +312,7 @@ class Template {
   }
 
   _createNode(baseText) {
-    let fragment = this[templateSymbol];
+    let fragment = this.context.constructor[templateSymbol];
     if (!fragment) {
       fragment = document.createElement('template');
       fragment.innerHTML = baseText;
@@ -400,7 +400,14 @@ class Template {
   const supportsAdoptedStyleSheets = 'adoptedStyleSheets' in document;  
   
   if (!supportsAdoptedStyleSheets) {
+    function hasImports(content) {
+      return content.replace(/\s/g, '').match(/\@import/);
+    }
+
     function replaceSync(contents) {
+      if (hasImports(contents)) {
+        throw new Error('@import is not allowed when using CSSStyleSheet\'s replaceSync method');
+      }
       if (this[node]) {
         this[node]._sheet.innerHTML = contents;
         updateAdopters(this);
@@ -425,7 +432,6 @@ class Template {
     const node = Symbol('constructible style sheets');
     const constructed = Symbol('constructed');
     const obsolete = Symbol('obsolete');
-    const removalListener = Symbol('listener');
     const iframe = document.createElement('iframe');
     const mutationCallback = mutations => {
       mutations.forEach(mutation => {
@@ -448,11 +454,14 @@ class Template {
         });
       });
     };
+
     const observer = new MutationObserver(mutationCallback);
     observer.observe(document.body, { childList: true });
     iframe.hidden = true;
     document.body.appendChild(iframe);
-    
+    const frameBody = iframe.contentWindow.document.body;
+    document.body.removeChild(iframe);
+
     const appendContent = (location, sheet) => {
       const clone = sheet[node]._sheet.cloneNode(true);
       location.body ? location = location.body : null;
@@ -467,25 +476,12 @@ class Template {
         adopter.clone.innerHTML = sheet[node]._sheet.innerHTML;
       });
     };
-    
-    const onShadowRemoval = (root, observer) => event => {
-      const shadowRoot = event.target.shadowRoot;
-      if (shadowRoot && shadowRoot.adoptedStyleSheets.length) {
-        const adoptedStyleSheets = shadowRoot.adoptedStyleSheets;
-        adoptedStyleSheets
-          .map(sheet => sheet[node])
-          .map(sheet => {
-          sheet._adopters = sheet._adopters.filter(adopter => adopter.location !== shadowRoot);
-        });
-      }
-      observer.disconnect();
-    };
 
     class _StyleSheet {
       constructor() {
         this._adopters = [];
         const style = document.createElement('style');
-        iframe.contentWindow.document.body.appendChild(style);
+        frameBody.appendChild(style);
         this._sheet = style;
         style.sheet[node] = this;
         if (!style.sheet.constructor.prototype.replace) {
@@ -534,15 +530,11 @@ class Template {
             appendContent(this, sheet);
           });
         }
-        
-        const removalListener = onShadowRemoval(this, observer);
-        this[removalListener] = removalListener;
-        this.addEventListener('DOMNodeRemoved', removalListener, true);
       }
     };
 
     Object.defineProperty(ShadowRoot.prototype, 'adoptedStyleSheets', adoptedStyleSheetsConfig);
-    Object.defineProperty(document, 'adoptedStyleSheets', adoptedStyleSheetsConfig);
+    Object.defineProperty(Document.prototype, 'adoptedStyleSheets', adoptedStyleSheetsConfig);
   }
 }(undefined));
 
